@@ -61,7 +61,7 @@ begin
     -- **** ADD ****
     if (cmd_add = '1') and (cmd_and = '0') and (cmd_or = '0') and (cmd_XOR = '0')  then
       
-      tmp <= to_integer (unsigned (op1) + unsigned (op2) + to_integer (cin));
+      tmp <= to_integer (signed (op1) + signed (op2) + to_integer (cin));
 
       -- si depassement capacité lever flag V
       if tmp > 16#FFFFFFFF# then
@@ -69,7 +69,7 @@ begin
         N <= '0';
         Z <= '0';       
         COUT <= '0';         
-        res <= Std_Logic_Vector (16#FFFFFFFF# - to_unsigned (tmp, 32) );
+        res <= Std_Logic_Vector (16#FFFFFFFF# - to_signed (tmp, 32) );
 
       -- si = 0 lever flag N
       else
@@ -78,7 +78,7 @@ begin
           N <= '0';
           Z <= '1';       
           COUT <= '0';         
-          res <= Std_Logic_Vector ( to_unsigned (tmp, 32));
+          res <= Std_Logic_Vector ( to_signed (tmp, 32));
 
         -- si = 0xFFFFFFFF -> sortie = 0 lever flag N + V
         else
@@ -87,7 +87,7 @@ begin
             N <= '0';
             Z <= '1';       
             COUT <= '0';         
-            res <= Std_Logic_Vector ( to_unsigned (tmp, 32));
+            res <= Std_Logic_Vector ( to_signed (tmp, 32));
 
 
           -- si negatif lever flag Z
@@ -97,7 +97,7 @@ begin
               N <= '1';
               Z <= '0';       
               COUT <= '0';         
-              res <= Std_Logic_Vector ( to_unsigned (tmp, 32));
+              res <= Std_Logic_Vector ( to_signed (tmp, 32));
               
 
     -- sinon ne lever aucun flag
@@ -106,7 +106,7 @@ begin
               Z <= '0';       
               V <= '0';       
               COUT <= '0';         
-              res <= Std_Logic_Vector ( to_unsigned (tmp, 32));     
+              res <= Std_Logic_Vector ( to_signed (tmp, 32));     
 
             --end negatif si lever flag Z
             end if;

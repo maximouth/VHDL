@@ -61,13 +61,13 @@ begin
     op2 <= "00000000000000000000000000000000";      
     cmd_xor <= '0';
     cmd_or <= '0';
-    cmd_and <= '0';
+    cmd_and <= '1';
     cmd_add <= '0';
     vss <= '1';
     vdd <= '0';
-    res <= "00000000000000000000000000000000";      
+
     wait for 1 ns;
-    
+
 -- make some addition
     cmd_add <= '1';
     wait for 1 ns;
@@ -105,7 +105,6 @@ begin
     cmd_and <= '1'; 
     wait for 1 ns;
 
-    
 --  Wait forever; this will finish the simulation.
     wait;
   end process;
