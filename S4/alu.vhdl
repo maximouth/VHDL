@@ -100,14 +100,14 @@ begin
               res <= Std_Logic_Vector ( to_unsigned (tmp, 32));
               
 
-
-            -- sinon ne lever aucun flag
-            else        
-              res <= Std_Logic_Vector ( to_unsigned (tmp, 32));
+    -- sinon ne lever aucun flag
+            else
               N <= '0';
               Z <= '0';       
               V <= '0';       
               COUT <= '0';         
+              res <= Std_Logic_Vector ( to_unsigned (tmp, 32));     
+
             --end negatif si lever flag Z
             end if;
           -- end  si = 0xFFFFFFFF
@@ -116,7 +116,9 @@ begin
         end if;
       --  end depassement capacité
       end if;
-    -- end add  
+
+    
+-- end add  
     end if;           
 
     -- **** AND ****
