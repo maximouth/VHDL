@@ -134,13 +134,13 @@ architecture Behavior OF EXec is
 
     port (
 
-      inputLW : Std_logic;
-      inputLB : Std_logic;
-      inputSW : Std_logic;
-      inputSB : Std_logic;
+      inputLW : in Std_logic;
+      inputLB : in Std_logic;
+      inputSW : in Std_logic;
+      inputSB : in Std_logic;
 
-      inputDATA : Std_Logic_Vector (31 downto 0);
-      inputDEST : Std_Logic_Vector (31 downto 0);
+      inputDATA : in Std_Logic_Vector (31 downto 0);
+      inputDEST : in Std_Logic_Vector (31 downto 0);
       
       D2E_empty : in Std_Logic;
       D2E_pop : out Std_Logic_Vector (31 downto 0);
@@ -202,114 +202,192 @@ END component;
   -- end alu
   end component;
 
-  --declaration   
-  signal not_dec_op1 : Std_Logic_Vector (31 downto 0);
-  signal not_dec_op2 : Std_Logic_Vector (31 downto 0);
-  signal shift_output : Std_Logic_Vector (31 downto 0);        
+-----
+----- FAIRE LES DECLARATIONS DES SIGNAUX POUR CHAQUES COMPOSANT
+----- NE PAS REUTILISER CEUX DEJA DONNés DANS LES DEFNITIONS DES COMPOSANTQ
+-----
+
+
   
-  signal output1 : Std_Logic_Vector (31 downto 0);
-  signal output2 : Std_Logic_Vector (31 downto 0);
-  signal outputmux : Std_Logic_Vector (31 downto 0);        
+  --declaration des signaux pour les differents elements
+
+  -- declaration mux 1
+  signal input1_mux1 : Std_Logic_Vector (31 downto 0);
+  signal input2_mux1 : Std_Logic_Vector (31 downto 0);  
+
+  signal output_mux1 : Std_Logic_Vector (31 downto 0);
+  signal mux1_cmd : Std_Logic;        
+  
+  -- declaration mux 2
+  signal input1_mux2 : Std_Logic_Vector (31 downto 0);
+  signal input2_mux2 : Std_Logic_Vector (31 downto 0);  
+
+  signal output_mux2 : Std_Logic_Vector (31 downto 0);
+  signal mux2_cmd : Std_Logic;
+  
+  -- declaration mux 3
+  signal input1_mux3 : Std_Logic_Vector (31 downto 0);
+  signal input2_mux3 : Std_Logic_Vector (31 downto 0);  
+  
+  signal output_mux3 : Std_Logic_Vector (31 downto 0);        
+  signal mux3_cmd : Std_Logic;
+  
+  -- declaration shift
+  signal shift_input : Std_Logic_Vector (31 downto 0);        
+  signal shift_dec_cy : Std_Logic;        
+
+  signal shift_lsl : Std_Logic;
+  signal shift_lsr : Std_Logic;
+  signal shift_asr : Std_Logic;
+  signal shift_ror : Std_Logic;
+  signal shift_rrx : Std_Logic;
+  signal shift_val : Std_Logic_Vector (4 downto 0);
+
+  signal shift_out_cy : Std_Logic;
+  signal shift_output : Std_Logic_Vector (31 downto 0);        
 
   
   -- declaration alu
-  signal op1, op2, res : Std_Logic_Vector (31 downto 0);
-  signal cmd_add, cmd_and, cmd_or, cmd_xor, cin, cout, z, n, v, shift_cy : Std_Logic;     
+  signal alu_op1 : Std_Logic_Vector (31 downto 0);
+  signal alu_op2 : Std_Logic_Vector (31 downto 0);
+  signal alu_res : Std_Logic_Vector (31 downto 0);
+  
+  signal alu_cmd_add : Std_Logic;
+  signal alu_cmd_and : Std_Logic;
+  signal alu_cmd_or : Std_Logic;
+  signal alu_cmd_xor : Std_Logic;
+
+  signal alu_cin : Std_Logic;
+  signal alu_cout : Std_Logic;
+
+  signal alu_z : Std_Logic;
+  signal alu_n : Std_Logic;
+  signal alu_v : Std_Logic;
 
   -- declaration fifo
-  signal din : Std_Logic_Vector (1 downto 0);
-  signal push, pop, full, empty : Std_Logic;     
+  signal fifo_din : Std_Logic_Vector (1 downto 0);
 
-  --declaration mux
-  
+  signal fifo_push : Std_Logic;     
+  signal fifo_pop  : Std_Logic;     
+  signal fifo_full : Std_Logic;     
+  signal fifo_empty : Std_Logic;     
+    
+  -- declaration unknown
+  signal unknown_inputLW : Std_Logic;
+  signal unknown_inputLB : Std_logic;
+  signal unknown_inputSW : Std_logic;
+  signal unknown_inputSB : Std_logic;
+
+  signal unknown_inputDATA : Std_Logic_Vector (31 downto 0);
+  signal unknown_inputDEST : Std_Logic_Vector (31 downto 0);
+      
+  signal unknown_D2E_empty : Std_Logic;
+  signal unknown_D2E_pop : Std_Logic_Vector (31 downto 0);
+      
+  signal unknown_fifo_push: Std_logic ;
+  signal unknown_fifo_full : Std_Logic_Vector (31 downto 0);
 
   begin
 
 
 
---instatiation alu
+-- Instanciation alu
     alu_0: alu
     port map (
-      op1 => op1,
-      op2 => op2,
-      cmd_add => cmd_add,
-      cmd_and => cmd_and,
-      cmd_or  => cmd_or,
-      cmd_xor => cmd_xor,
-      cin => cin,
-      cout => cout,       
-      z => z,
-      n => n,
-      v => v,
-   
-  
-   res => res
+      op1 => alu_op1,
+      op2 => alu_op2,
+      cmd_add => alu_cmd_add,
+      cmd_and => alu_cmd_and,
+      cmd_or  => alu_cmd_or,
+      cmd_xor => alu_cmd_xor,
+      cin => alu_cin,
+      cout => alu_cout,       
+      z => alu_z,
+      n => alu_n,
+      v => alu_v,
+      res => alu_res
       );
 
--- instatiation fifo
+-- Instanciation fifo
   fifo_0: fifo
     port map (
-      din => din,
-      push => push,
-      pop => pop,
-      full => full,
-      empty  => empty,
+      din => fifo_din,
+      push => fifo_push,
+      pop => fifo_pop,
+      full => fifo_full,
+      empty  => fifo_empty,
       ck => ck
       );
 
-    -- mux op1
+-- Instanciation mux op1
     muxop1 : mux
       port map (
-        input1 => dec_op1,
-        input2 => not_dec_op1,
+        input1 => input1_mux1,
+        input2 => input2_mux1,
 
-        cmd => dec_comp_op1,
-        output => output1
+        cmd => mux1_cmd,
+        output => output_mux1
         );
   
-    -- mux op2
+ -- Instanciation mux op2
     muxop2 : mux
       port map (
-        input1 => shift_output,
-        input2 => not_dec_op2,
+        input1 => input1_mux2,
+        input2 => input2_mux2,
 
-        cmd => dec_comp_op1,
-        output => output2
+        cmd => mux2_cmd,
+        output => output_mux2
         );
   
-    -- mux res alu
+ -- Instanciation mux3 (res alu)
     muxresalu : mux
       port map (
-        input1 => res,
-        input2 => output1,
+        input1 => input1_mux3,
+        input2 => input2_mux3,
 
-        cmd => dec_comp_op1,
-        output => outputmux
+        cmd => mux3_cmd,
+        output => output_mux3
         );
 
 
-    -- SHIFT
+ -- Instanciation SHIFT
     shift_0 : shift
       port map (
-        op1 => dec_op2,
-        dec_cy => dec_cy,		
-        dec_shift_lsl => dec_shift_lsl,	
-        dec_shift_lsr => dec_shift_lsr,	
-        dec_shift_asr => dec_shift_asr,	
-        dec_shift_ror => dec_shift_ror,	
-        dec_shift_rrx => dec_shift_rrx,	
-        dec_shift_val => dec_shift_val,
+        op1 => shift_input,
+        dec_cy => shift_dec_cy,		
+        dec_shift_lsl => shift_lsl,	
+        dec_shift_lsr => shift_lsr,	
+        dec_shift_asr => shift_asr,	
+        dec_shift_ror => shift_ror,	
+        dec_shift_rrx => shift_rrx,	
+        dec_shift_val => shift_val,
 
-        shift_cy => shift_cy,
+        shift_cy => shift_out_cy,
         shift_output => shift_output
 
 
         );
 
+    -- Instanciation unknown 
+    unknown_0 : unknown
+      port map (
+        inputLB => unknown_inputLB,
+        inputLW => unknown_inputLW,
+        inputSB => unknown_inputSB,
+        inputSw => unknown_inputSW,
+
+        inputDATA => unknown_inputDATA,
+        inputDEST => unknown_inputDEST,
+
+        D2E_empty => unknown_D2E_empty,
+
+        fifo_full => unknown_fifo_full
+        );
 
     ---- decription du comportement
     ---- qui est relier à qui
 
+    
     
 
 
