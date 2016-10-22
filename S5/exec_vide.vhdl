@@ -119,7 +119,8 @@ architecture Behavior OF EXec is
       dec_shift_rrx	: in Std_Logic;
       dec_shift_val	: in Std_Logic_Vector(4 downto 0);
 
-      shift_cy: out Std_logic ;
+      shift_cy: in Std_logic ;
+      shift_cy_out: out Std_logic ;
       shift_output : out Std_Logic_Vector (31 downto 0)
 
       );
@@ -304,6 +305,10 @@ END component;
 
 
         );
+
+
+    ---- decription du comportement
+    ---- qui est relier à qui
 
     
 
