@@ -33,7 +33,7 @@ architecture Structurel of alu_tb is
   end component;
 
   signal op1, op2, res : Std_Logic_Vector (31 downto 0);
-  signal cmd_add, cmd_and, cmd_or, cmd_xor, cin : Std_Logic;     
+  signal cmd_add, cmd_and, cmd_or, cmd_xor, cin, cout, z, n, v : Std_Logic;     
   signal vdd, vss : bit;
 
   
@@ -46,9 +46,13 @@ begin
       cmd_and => cmd_and,
       cmd_or  => cmd_or,
       cmd_xor => cmd_xor,
-      cin => cin, 
+      cin => cin,
+      cout => cout,       
       vss => vss,
       vdd => vdd,
+      z => z,
+      n => n,
+      v => v,
       res => res
       );
   
@@ -57,55 +61,65 @@ begin
   begin
 
 --reset the alu
-    op1 <= "00000000000000000000000000000000";      
-    op2 <= "00000000000000000000000000000000";      
     cmd_xor <= '0';
     cmd_or <= '0';
-    cmd_and <= '1';
+    cmd_and <= '0';
     cmd_add <= '0';
     vss <= '1';
     vdd <= '0';
-
+    cin <= '0';
     wait for 1 ns;
 
--- make some addition
-    cmd_add <= '1';
+    --xor
+    cmd_add <= '1';  
+    op1 <= "00000000000000000000000000000101";      
+    op2 <= "00000000000000000000000000000001";      
     wait for 1 ns;
 
-    op1 <= "00000000000000000000000000000000";      
-    op2 <= "00000000000000000000000000000000";      
-    cmd_add <= '1';
+    cmd_add <= '0';  
     wait for 1 ns;
 
-    op1 <= "11111111111111111111111111111111";      
-    op2 <= "00000000000000000000000000000000";      
-    cmd_add <= '1';
+    -- or
+    cmd_add <= '1';  
+    op1 <= "00000000000000000000000000000001";      
+    op2 <= "00000000000000000000000000000001";      
     wait for 1 ns;
 
-    op1 <= "10000000000000000000000000000000";      
-    op2 <= "00000000000000000000000000000000";      
-    cmd_add <= '1';
+    cmd_add <= '0';  
     wait for 1 ns;
 
--- make some and
-    op1 <= "00000000000000000000000000000000";      
-    op2 <= "00000000000000000000000000000000";      
-    cmd_add <= '0';
-    cmd_and <= '1'; 
+   --or
+    cmd_add <= '1';  
+    op1 <= "00000000000000000000000000000101";      
+    op2 <= "00000000000000000000000000000001";      
     wait for 1 ns;
 
-    op1 <= "11111111111111111111111111111111";      
-    op2 <= "00000000000000000000000000000000";      
-    cmd_add <= '0';
-    cmd_and <= '1'; 
+    cmd_add <= '0';  
     wait for 1 ns;
 
-    op1 <= "10101010101010101010101010101010";      
-    op2 <= "00000000000000000000000000000000";      
-    cmd_and <= '1'; 
+    
+    -- or
+    cmd_add <= '1';  
+    op1 <= "00000000000000000000000000000001";      
+    op2 <= "11111111111111111111111111111111";      
     wait for 1 ns;
 
---  Wait forever; this will finish the simulation.
+    cmd_add <= '0';  
+    wait for 1 ns;
+
+    -- or
+    cmd_add <= '1';  
+    op1 <= "01010101010101010101010101010101";      
+    op2 <= "10101010101010101010101010101010";      
+    wait for 1 ns;
+
+    cmd_add <= '0';  
+    wait for 1 ns;
+
+    
+
+    
+--  Wait forever  this will finish the simulation.
     wait;
   end process;
 end Structurel;
