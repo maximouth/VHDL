@@ -80,4 +80,94 @@ end EXec;
 
 architecture Behavior OF EXec is
 
+  -- declaration fifo
+  component fifo 
+	PORT(
+		din		: in std_logic_vector(1 downto 0);
+		dout		: out std_logic_vector(1 downto 0);
+
+		-- commands
+		push		: in std_logic;
+		pop		: in std_logic;
+
+		-- flags
+		full		: out std_logic;
+		empty		: out std_logic;
+
+		reset_n	: in std_logic;
+		ck			: in std_logic;
+		vdd		: in bit;
+		vss		: in bit
+	);
+END component;
+
+
+  
+  --  Declaration un composant alu
+  component alu
+
+    port (
+      op1			: in Std_Logic_Vector(31 downto 0);
+      op2			: in Std_Logic_Vector(31 downto 0);
+      cin			: in Std_Logic;
+
+      cmd_add	: in Std_Logic;
+      cmd_and	: in Std_Logic;
+      cmd_or		: in Std_Logic;
+      cmd_xor	: in Std_Logic;
+
+      res			: out Std_Logic_Vector(31 downto 0);
+      cout		: out Std_Logic;
+      z			: out Std_Logic;
+      n			: out Std_Logic;
+      v			: out Std_Logic;
+      
+      vdd			: in bit;
+      vss			: in bit);
+
+  -- end alu
+  end component;
+
+  -- declaration alu
+  signal op1, op2, res : Std_Logic_Vector (31 downto 0);
+  signal cmd_add, cmd_and, cmd_or, cmd_xor, cin, cout, z, n, v : Std_Logic;     
+
+  -- declaration fifo
+  signal din : Std_Logic_Vector (1 downto 0);
+  signal push, pop, full, empty : Std_Logic;     
+
+  
+  begin
+--instatiation alu
+    alu_0: alu
+    port map (
+      op1 => op1,
+      op2 => op2,
+      cmd_add => cmd_add,
+      cmd_and => cmd_and,
+      cmd_or  => cmd_or,
+      cmd_xor => cmd_xor,
+      cin => cin,
+      cout => cout,       
+      z => z,
+      n => n,
+      v => v,
+      res => res
+      );
+
+-- instatiation fifo
+  fifo_0: fifo
+    port map (
+      din => din,
+      push => push,
+      pop => pop,
+      full => full,
+      empty  => empty,
+      ck => ck
+      );
+
+  
+  
+
+  
 end Behavior;
