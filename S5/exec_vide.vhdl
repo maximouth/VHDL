@@ -80,11 +80,84 @@ end EXec;
 
 architecture Behavior OF EXec is
 
+
+
+  
+    --  Declaration un composant mux
+  component mux
+
+    port (
+      input1 : in Std_Logic_Vector (31 downto 0);
+      input2 : in Std_Logic_Vector (31 downto 0);
+
+      cmd : in Std_logic ;
+
+      output : out Std_Logic_Vector (31 downto 0)
+      );
+  END component;
+
+
+
+
+
+  ---
+  ---  rajouter des signal pour les differents shift command
+  ---
+  ---
+    --  Declaration un composant shift
+  component shift
+
+    port (
+      
+      op1 : in Std_Logic_Vector (31 downto 0);
+      
+      dec_cy			: in Std_Logic;
+      dec_shift_lsl	: in Std_Logic;
+      dec_shift_lsr	: in Std_Logic;
+      dec_shift_asr	: in Std_Logic;
+      dec_shift_ror	: in Std_Logic;
+      dec_shift_rrx	: in Std_Logic;
+      dec_shift_val	: in Std_Logic_Vector(4 downto 0);
+
+      shift_cy: out Std_logic ;
+      shift_output : out Std_Logic_Vector (31 downto 0)
+
+      );
+    --end shift
+  END component;
+
+
+
+    --  Declaration un composant unknown
+  component unknown
+
+    port (
+
+      inputLW : Std_logic;
+      inputLB : Std_logic;
+      inputSW : Std_logic;
+      inputSB : Std_logic;
+
+      inputDATA : Std_Logic_Vector (31 downto 0);
+      inputDEST : Std_Logic_Vector (31 downto 0);
+      
+      D2E_empty : in Std_Logic;
+      D2E_pop : out Std_Logic_Vector (31 downto 0);
+      
+      fifo_push: out Std_logic ;
+      fifo_full : in Std_Logic_Vector (31 downto 0)
+
+      );
+    --end unknown
+  END component;
+
+  
   -- declaration fifo
   component fifo 
-	PORT(
-		din		: in std_logic_vector(1 downto 0);
-		dout		: out std_logic_vector(1 downto 0);
+    generic(WIDTH: positive := 1);       
+    PORT(
+		din		: in std_logic_vector(WIDTH-1 downto 0);
+		dout		: out std_logic_vector(WIDTH-1 downto 0);
 
 		-- commands
 		push		: in std_logic;
@@ -128,16 +201,31 @@ END component;
   -- end alu
   end component;
 
+  --declaration   
+  signal not_dec_op1 : Std_Logic_Vector (31 downto 0);
+  signal not_dec_op2 : Std_Logic_Vector (31 downto 0);
+  signal shift_output : Std_Logic_Vector (31 downto 0);        
+  
+  signal output1 : Std_Logic_Vector (31 downto 0);
+  signal output2 : Std_Logic_Vector (31 downto 0);
+  signal outputmux : Std_Logic_Vector (31 downto 0);        
+
+  
   -- declaration alu
   signal op1, op2, res : Std_Logic_Vector (31 downto 0);
-  signal cmd_add, cmd_and, cmd_or, cmd_xor, cin, cout, z, n, v : Std_Logic;     
+  signal cmd_add, cmd_and, cmd_or, cmd_xor, cin, cout, z, n, v, shift_cy : Std_Logic;     
 
   -- declaration fifo
   signal din : Std_Logic_Vector (1 downto 0);
   signal push, pop, full, empty : Std_Logic;     
 
+  --declaration mux
   
+
   begin
+
+
+
 --instatiation alu
     alu_0: alu
     port map (
@@ -152,7 +240,9 @@ END component;
       z => z,
       n => n,
       v => v,
-      res => res
+   
+  
+   res => res
       );
 
 -- instatiation fifo
@@ -166,8 +256,57 @@ END component;
       ck => ck
       );
 
-  
-  
+    -- mux op1
+    muxop1 : mux
+      port map (
+        input1 => dec_op1,
+        input2 => not_dec_op1,
 
+        cmd => dec_comp_op1,
+        output => output1
+        );
   
+    -- mux op2
+    muxop2 : mux
+      port map (
+        input1 => shift_output,
+        input2 => not_dec_op2,
+
+        cmd => dec_comp_op1,
+        output => output2
+        );
+  
+    -- mux res alu
+    muxresalu : mux
+      port map (
+        input1 => res,
+        input2 => output1,
+
+        cmd => dec_comp_op1,
+        output => outputmux
+        );
+
+
+    -- SHIFT
+    shift_0 : shift
+      port map (
+        op1 => dec_op2,
+        dec_cy => dec_cy,		
+        dec_shift_lsl => dec_shift_lsl,	
+        dec_shift_lsr => dec_shift_lsr,	
+        dec_shift_asr => dec_shift_asr,	
+        dec_shift_ror => dec_shift_ror,	
+        dec_shift_rrx => dec_shift_rrx,	
+        dec_shift_val => dec_shift_val,
+
+        shift_cy => shift_cy,
+        shift_output => shift_output
+
+
+        );
+
+    
+
+
+-- FIN    
 end Behavior;
