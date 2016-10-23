@@ -96,14 +96,6 @@ architecture Behavior OF EXec is
       );
   END component;
 
-
-
-
-
-  ---
-  ---  rajouter des signal pour les differents shift command
-  ---
-  ---
     --  Declaration un composant shift
   component shift
 
@@ -140,13 +132,13 @@ architecture Behavior OF EXec is
       inputSB : in Std_logic;
 
       inputDATA : in Std_Logic_Vector (31 downto 0);
-      inputDEST : in Std_Logic_Vector (31 downto 0);
+      inputDEST : in Std_Logic_Vector (3 downto 0);
       
       D2E_empty : in Std_Logic;
       D2E_pop : out Std_Logic_Vector (31 downto 0);
       
       fifo_push: out Std_logic ;
-      fifo_full : in Std_Logic_Vector (31 downto 0)
+      fifo_full : in Std_Logic 
 
       );
     --end unknown
@@ -211,28 +203,28 @@ END component;
   
   --declaration des signaux pour les differents elements
 
-  -- declaration mux 1
+  --  *** declaration mux 1
   signal input1_mux1 : Std_Logic_Vector (31 downto 0);
   signal input2_mux1 : Std_Logic_Vector (31 downto 0);  
 
   signal output_mux1 : Std_Logic_Vector (31 downto 0);
   signal mux1_cmd : Std_Logic;        
   
-  -- declaration mux 2
+  --  ***declaration mux 2
   signal input1_mux2 : Std_Logic_Vector (31 downto 0);
   signal input2_mux2 : Std_Logic_Vector (31 downto 0);  
 
   signal output_mux2 : Std_Logic_Vector (31 downto 0);
   signal mux2_cmd : Std_Logic;
   
-  -- declaration mux 3
+  --  ***declaration mux 3
   signal input1_mux3 : Std_Logic_Vector (31 downto 0);
   signal input2_mux3 : Std_Logic_Vector (31 downto 0);  
   
   signal output_mux3 : Std_Logic_Vector (31 downto 0);        
   signal mux3_cmd : Std_Logic;
   
-  -- declaration shift
+  --  *** declaration shift
   signal shift_input : Std_Logic_Vector (31 downto 0);        
   signal shift_dec_cy : Std_Logic;        
 
@@ -264,7 +256,7 @@ END component;
   signal alu_n : Std_Logic;
   signal alu_v : Std_Logic;
 
-  -- declaration fifo
+  -- *** declaration fifo
   signal fifo_din : Std_Logic_Vector (1 downto 0);
 
   signal fifo_push : Std_Logic;     
@@ -272,20 +264,20 @@ END component;
   signal fifo_full : Std_Logic;     
   signal fifo_empty : Std_Logic;     
     
-  -- declaration unknown
+  --  ***declaration unknown
   signal unknown_inputLW : Std_Logic;
   signal unknown_inputLB : Std_logic;
   signal unknown_inputSW : Std_logic;
   signal unknown_inputSB : Std_logic;
 
   signal unknown_inputDATA : Std_Logic_Vector (31 downto 0);
-  signal unknown_inputDEST : Std_Logic_Vector (31 downto 0);
+  signal unknown_inputDEST : Std_Logic_Vector (3 downto 0);
       
   signal unknown_D2E_empty : Std_Logic;
   signal unknown_D2E_pop : Std_Logic_Vector (31 downto 0);
       
   signal unknown_fifo_push: Std_logic ;
-  signal unknown_fifo_full : Std_Logic_Vector (31 downto 0);
+  signal unknown_fifo_full : Std_Logic;
 
   begin
 
@@ -381,15 +373,78 @@ END component;
 
         D2E_empty => unknown_D2E_empty,
 
-        fifo_full => unknown_fifo_full
+        fifo_push => unknown_fifo_push,
+        fifo_full => fifo_full
         );
 
     ---- decription du comportement
     ---- qui est relier à qui
 
+    -- ce qui va dans le shift
+    shift_input <= dec_op2;
+    shift_dec_cy <= dec_cy;
+    shift_lsl <= dec_shift_lsl;
+    shift_lsr <= dec_shift_lsr;
+    shift_asr <= dec_shift_asr;
+    shift_ror <= dec_shift_ror;
+    shift_rrx <= dec_shift_rrx;
+    shift_val <= dec_shift_val;
+    
+    --ce qui va dans mux1    
+    input1_mux1 <= shift_output;
+    input2_mux1 <= not shift_output;
+    mux1_cmd <= dec_comp_op2;
+    
+    --ce qui va dans mux 2
+    input1_mux2 <= dec_op1;
+    input2_mux2 <= not dec_op1;     
+    mux2_cmd <= dec_comp_op1;
+
+    --ce qui va dans alu          
+
+    ---  
+    --- pour chaque opration en entrée
+    --- mettre les signaux de maniere differentes
+    ---  (voir feuille cours)
+    --- ??? vrai ou pas ???
+    --- ou dans dec ?
+
+    alu_op1 <= output_mux1;
+    alu_op2 <= output_mux2; 
+    alu_cmd_add <= dec_alu_add;
+    alu_cmd_and <= dec_alu_and;
+    alu_cmd_or <= dec_alu_or;
+    alu_cmd_xor <= dec_alu_xor;
+    
+    alu_cin <= dec_alu_cy;
+
+    -- ce qui va dans unknown
+    unknown_fifo_full <= fifo_full;
+    unknown_D2E_empty <= dec2exe_empty;
+
+    unknown_inputSB <= dec_mem_sb;
+    unknown_inputSW <= dec_mem_sw;
+    unknown_inputLB <= dec_mem_sb;
+    unknown_inputLW <= dec_mem_lw;
+
+    unknown_inputDATA <= dec_mem_data;
+    unknown_inputDEST <= dec_mem_dest;
     
     
+    -- ce qui va dans mux 3
+    input1_mux3 <= alu_res;
+    input2_mux3 <= output_mux2;
 
+    -- ***  mux3_cmd ??? ***
+    
+    -- ce qui va dans fifo
+    fifo_push <= unknown_fifo_push;
+    --  *** tout les sb lb.. ou les mettre ??? ***
+    -- reset clk et autre pas mis non plus...
+    -- verifier sur les autre qu'il en manque pas
 
+    
+    -- ce qui sort de exe
+    
 -- FIN    
 end Behavior;
