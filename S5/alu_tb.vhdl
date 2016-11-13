@@ -32,6 +32,7 @@ architecture Structurel of alu_tb is
     
   end component;
 
+  -- declaration
   signal op1, op2, res : Std_Logic_Vector (31 downto 0);
   signal cmd_add, cmd_and, cmd_or, cmd_xor, cin, cout, z, n, v : Std_Logic;     
   signal vdd, vss : bit;
