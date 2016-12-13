@@ -1,0 +1,29 @@
+FILE= exec_vide.vhdl
+FILE_TEST = exec_vide_tb.vhdl
+FILE2 = exec_vide_tb
+
+#FILE= exec_vide.vhdl
+#FILE_TEST = exec_vide_tb.vhdl
+#FILE2 = exec_vide_tb
+
+CC= ghdl
+
+ghdl_all :
+	$(CC) -a -v $(FILE)
+	$(CC) -a -v $(FILE_TEST)
+	$(CC) -e -v $(FILE2)
+	$(CC) -r $(FILE2) --vcd=$(FILE2).vcd	
+
+
+ghdl_compile :
+	$(CC) -a -v $(FILE)
+
+ghdl_test :
+	$(CC) -a -v $(FILE_TEST)
+	$(CC) -e -v $(FILE2)
+	$(CC) -r $(FILE2) --vcd=$(FILE2).vcd	
+
+
+
+clean :
+	rm *~ *.o *.cf *.vcd $(FILE2) *#
