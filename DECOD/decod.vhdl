@@ -6,14 +6,22 @@ use ieee.numeric_std.all;
 entity Decod is
   port(
     -- Exec  operands
-    dec_op1		: out Std_Logic_Vector(31 downto 0); -- first alu input
-    dec_op2		: out Std_Logic_Vector(31 downto 0); -- shifter input
-    dec_exe_dest	: out Std_Logic_Vector(3 downto 0);  -- Rd destination
-    dec_exe_wb		: out Std_Logic;                     -- Rd destination write back
-    dec_flag_wb		: out Std_Logic;                     -- CSPR modifiy
+
+    -- first alu input
+    dec_op1		: out Std_Logic_Vector(31 downto 0);
+    -- shifter input
+    dec_op2		: out Std_Logic_Vector(31 downto 0);
+    -- Rd destination
+    dec_exe_dest	: out Std_Logic_Vector(3 downto 0);
+    -- Rd destination write back
+    dec_exe_wb		: out Std_Logic;
+    -- CSPR modifiy
+    dec_flag_wb		: out Std_Logic;                     
 
     -- Decod to mem via exec
-    dec_mem_data	: out Std_Logic_Vector(31 downto 0); -- data to MEM
+
+    -- data to MEM
+    dec_mem_data	: out Std_Logic_Vector(31 downto 0); 
     dec_mem_dest	: out Std_Logic_Vector(3 downto 0);
     dec_pre_index 	: out Std_logic;
 
@@ -49,14 +57,18 @@ entity Decod is
     -- Exe Write Back to reg
     exe_res		: in Std_Logic_Vector(31 downto 0);
 
+    -- CSPR
     exe_c		: in Std_Logic;
     exe_v		: in Std_Logic;
     exe_n		: in Std_Logic;
     exe_z		: in Std_Logic;
 
-    exe_dest		: in Std_Logic_Vector(3 downto 0); -- Rd destination
-    exe_wb		: in Std_Logic;                    -- Rd destination write back
-    exe_flag_wb		: in Std_Logic;                    -- CSPR modifiy
+    -- Rd destination
+    exe_dest		: in Std_Logic_Vector(3 downto 0);
+    -- Rd destination write back
+    exe_wb		: in Std_Logic;
+    -- CSPR modifiy
+    exe_flag_wb		: in Std_Logic;                    
 
     -- Ifetch interface
     dec_pc		: out Std_Logic_Vector(31 downto 0) ;
@@ -314,6 +326,27 @@ architecture Behavior OF Decod is
 
 -- DECOD FSM
 
+-- fifo 129 command
+  signal din129         : Std_logic_vector (128 downto 0);
+  signal dout129        : Std_logic_vector (128 downto 0);
+  signal push129        : Std_Logic;
+  signal pop129         : Std_Logic;
+  signal full129        : Std_Logic;
+  signal empty129       : Std_Logic;
+  
+-- fifo 32  command
+  signal din32         : Std_logic_vector (128 downto 0);
+  signal dout32        : Std_logic_vector (128 downto 0);
+  signal push32        : Std_Logic;
+  signal pop32         : Std_Logic;
+  signal full32        : Std_Logic;
+  signal empty32       : Std_Logic;
+
+
+-- signal instruction
+  signal instruction : Std_logic_vector (32 downto 0);
+
+  
   type state_type is (FETCH, RUN, BRANCH, LINK, MTRANS);
   signal cur_state, next_state : state_type;
 
@@ -325,7 +358,14 @@ begin
       reset_n	 => reset_n,
       ck	 => ck,
       vdd	 => vdd,
-      vss	 => vss);
+      vss	 => vss,
+      din        => din129,
+      dout       => dout129,
+      push       => push129,
+      pop        => pop129,
+      full       => full129,
+      empty      => empty129
+      );
 
   dec2if : fifo
     generic map (WIDTH => 32)
@@ -334,7 +374,14 @@ begin
       reset_n	 => reset_n,
       ck	 => ck,
       vdd	 => vdd,
-      vss	 => vss);
+      vss	 => vss,
+      din        => din32,
+      dout       => dout32,
+      push       => push32,
+      pop        => pop32,
+      full       => full32,
+      empty      => empty32
+      );
 
   reg_inst  : reg
     port map(	wdata1		=> exe_res,
@@ -393,20 +440,7 @@ begin
 
 -- FSM
 
-  process (ck)
-  begin
-
-    if (rising_edge(ck)) then
-      if (reset_n = '0') then
-        cur_state <= Run;
-      else
-        cur_state <= next_state;
-      end if;
-    end if;
-
-  end process;
-
---state machine process.
+  --state machine process.
   process (cur_state, dec2if_full, cond, condv, operv,
            dec2exe_full, if2dec_empty, reg_pcv, bl_i,
            branch_t, and_i, eor_i, sub_i, rsb_i, add_i,
@@ -443,6 +477,191 @@ begin
 
 
     end case;
+  -- state machine
   end process;
 
+  -- decod process
+
+  process (ck)
+
+    variable cond    : Std_Logic;
+    variable rd_lu   : Std_logic_vector (3 downto 0);
+    variable rn_lu   : Std_logic_vector (3 downto 0);
+    variable rm_lu   : Std_logic_vector (3 downto 0);
+    variable opcode  : Std_logic_vector (3 downto 0);
+
+    variable val_dec : Std_logic_vector (4 downto 0);
+    variable op2     : Std_logic_vector (31 downto 0);       
+    
+
+  begin
+
+    if (rising_edge(ck)) then
+      if (reset_n = '0') then
+        cur_state <= Run;
+      else
+        cur_state <= next_state;
+      --end reset
+      end if;
+
+
+      -- traitement 
+
+      --> il faut recuperer l'instruction mais ou?
+
+      -- regarder la condition d'execution
+      case instruction (31 downto 28) is 
+        --EQ
+        when "0000" => cond := exe_z and '1';
+        --NE
+        when "0001" => cond := not (exe_z and '0');
+        --CS
+        when "0010" => cond := exe_c and '1';
+        --CC
+        when "0011" => cond := not (exe_c and '1');
+        -- MI
+        when "0100" => cond := exe_n and '1';
+        -- PL
+        when "0101" => cond := not (exe_n and '1');
+        -- VS
+        when "0110" => cond := exe_v and '1';
+        -- VC
+        when "0111" => cond := not (exe_v and '1');
+        --HI
+        when "1000" => cond := (exe_c and '1') and not (exe_v and '1');
+        --LS
+        when "1001" => cond := (exe_z and '1') and not (exe_c and '1');
+        --GE
+        when "1010" => --?
+        --LT
+        when "1011" => --?
+        --GT  
+        when "1100" => --?
+        -- LE
+        when "1101" => --?
+        -- AL
+        when "1110" => cond := '1';
+        when others => cond := '0';
+      end case;
+
+      -- si la condition est bonne continuer le decodage
+      if cond = '1' then
+        --recuperer valeur
+        opcode := instruction (24 downto 21);
+        rn_lu  := instruction (19 downto 16);
+        rd_lu  := instruction (15 downto 12);
+
+        -- decoder l'operande 2
+        if instruction (25) = '1' then
+          --> immediat
+          -- faire un shift rotation de valeur inst (11 downto 8)
+          -- recuperer valeur dans variable 32 bit (op1 ou 2 dans fifo129)
+          
+        else
+          --> registre
+          rm_lu := instruction (3 downto 0);
+
+          if instruction (4) = '0' then
+            --valeur
+            val_dec := instruction (11 downto 7);
+          else
+          --registre
+          --lire valeur registre
+          --  ->stocker les 5 premiers bits dans val_dec
+          end if;
+          
+          case instruction (6 downto 5) is
+            -- ->mettre dans op2 la valeur de sortie du shifter
+            -- lsl
+            when "00" =>
+            --lsr
+            when "01" =>
+            --asr
+            when "10" =>
+            --ror
+            when "11" =>
+            when others => 
+          end case;
+
+        -- decodage operande2  
+        end if;
+
+
+        -- recuperer l'opcode de l'instruction
+        -- mettre tout les signaux en sortie a la bonne valeur pour exe
+        -- remplir le fifo avec les bons trucs
+
+        case instruction (24 downto 21) is
+          -- AND
+          when "0000" =>
+          -- EOR
+          when "0001" =>
+          -- SUB
+          when "0010" =>
+          -- RSB
+          when "0011" =>
+          -- ADD
+          when "0100" =>
+          -- ADC
+          when "0101" =>
+          -- SBC
+          when "0110" =>
+          -- RSC
+          when "0111" =>
+          -- TST
+          when "0100" =>
+          -- TEQ
+          when "1001" =>
+          -- CMP
+          when "1010" =>
+          -- CMN
+          when "1011" =>
+          -- ORR
+          when "1100" =>
+          -- MOV
+          when "1101" =>
+          -- BIC
+          when "1110" =>
+          -- MVN
+          when "1111" =>
+          when others =>
+          
+        -- fin gestion instruction
+        end case;
+        
+      -- if condition bonne
+      end if;
+      
+      
+      -- prendre la valeur dans instruction 
+      -- -> regarder la condition d'execution 
+      --    -> si different de "1110"
+      --          -> regarder les flags
+      --               -> si bon continuer le decodage
+      --               -> sinon incrementer pc? (ou machine a etat?)
+      --                  et attendre la prochaine instruction
+      --                  
+      ---> regarder opcode et decoder RS et RD
+      --
+      -- -> regarder le type de op2
+      --    -> si 1 immediat
+      --          -> 0->3 registre
+      --          -> si 4 = 0
+      --             -> 5->6 type decalage
+      --             -> 7->11 valeur
+      --          -> sinon
+      --             -> 5->6 type decalage
+      --             -> 8->11 registre qui contient la valeur
+      --    -> si 0 registre
+      --          -> 0->7  valeur operande
+      --          -> 8->11 valeur rotation 
+      
+      
+
+
+    --end rising edge
+    end if;
+  -- process clock
+  end process;
+  
 end Behavior;
