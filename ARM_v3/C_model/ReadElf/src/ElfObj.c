@@ -223,6 +223,7 @@ if (pObj->Head.e_shnum != 0)
 			}
 
 	// Lecture de la Section .bss
+		pObj->SecBssHdr = SecByName(pObj, ".bss");
 		//if((pObj->SecBssHdr = SecByName(pObj, ".bss")))
 		//Pour cette section donnees non initialisee rien a faire
 	

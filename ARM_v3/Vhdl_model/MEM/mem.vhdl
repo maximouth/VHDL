@@ -55,7 +55,8 @@ begin
 	mem_wb <= '1' when (exe_mem_lw = '1' or exe_mem_lb = '1') and
 								exe2mem_empty = '0' and dc_stall = '0' else '0';
 			
-	mem_adr <= exe_mem_adr;
+	mem_adr <=	exe_mem_adr(31 downto 2) & "00" when exe_mem_lw = '1' or exe_mem_lb = '1' else
+					exe_mem_adr;
 
 	mem_stw <= '1' when exe_mem_sw = '1' and exe2mem_empty = '0' else '0';
 	mem_stb <= '1' when exe_mem_sb = '1' and exe2mem_empty = '0' else '0';

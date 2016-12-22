@@ -99,14 +99,14 @@ uint32_t mem_lw(uint32_t adr)
 	return 0;
 	}
 
-void mem_sw(uint32_t adr, uint32_t data)
+int mem_sw(uint32_t adr, uint32_t data)
 	{
 	Seg *ps = TabSeg;
 
 	if (adr & 3)
 		{
 		fprintf(stderr, "Mem Error sw adr unalign\n");
-		return;
+		return 1;
 		}
 	
 	while (ps)
@@ -114,12 +114,13 @@ void mem_sw(uint32_t adr, uint32_t data)
 		if ((adr >= ps->va) && (adr < (ps->va + ps->size)))
 			{
 			*(uint32_t *) (ps->ra + (adr - ps->va)) = data;
-			return;
+			return 0;
 			}
 		if (adr < ps->va) break;
 		ps = ps->next;
 		}
 	fprintf(stderr, "Mem SW Error adr does not exist\n");
+	return 1;
 	}
 
 uint8_t mem_lb(uint32_t adr)
@@ -137,18 +138,22 @@ uint8_t mem_lb(uint32_t adr)
 	return 0;
 	}
 
-void mem_sb(uint32_t adr, uint8_t data)
+int mem_sb(uint32_t adr, uint8_t data)
 	{
 	Seg *ps = TabSeg;
 
 	while (ps)
 		{
 		if ((adr >= ps->va) && (adr < ps->va + ps->size))
+			{
 			*(uint8_t *) (ps->ra + (adr - ps->va)) = data;
+			return 0;
+			}
 		if (adr < ps->va) break;
 		ps = ps->next;
 		}
 	fprintf(stderr, "Mem Error SB adr does not exist\n");
+	return 1;
 	}
 
 void mem_free()

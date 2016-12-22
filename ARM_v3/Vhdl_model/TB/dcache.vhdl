@@ -31,12 +31,12 @@ begin
 
 process (mem_adr, mem_load)
 
-variable adr : unsigned(31 downto 0);
+variable adr : signed(31 downto 0);
 variable data : signed(31 downto 0);
 
 begin
 	if (mem_load = '1') then
-		adr := unsigned(mem_adr);
+		adr := signed(mem_adr);
 		data := TO_SIGNED(mem_lw(TO_INTEGER(adr)), 32);
 		dc_data <= std_logic_vector(data);
 	end if;
@@ -45,17 +45,18 @@ end process;
 
 process (ck)
 
-variable adr : unsigned(31 downto 0);
-variable data : unsigned(31 downto 0);
+variable adr : signed(31 downto 0);
+variable data : signed(31 downto 0);
+variable res : integer;
 
 begin
 	if rising_edge(ck) then
-		adr := unsigned(mem_adr);
-		data := unsigned(mem_data);
+		adr := signed(mem_adr);
+		data := signed(mem_data);
 		if	mem_stw = '1' then
-			mem_sw(TO_INTEGER(adr), TO_INTEGER(data));
+			res := mem_sw(TO_INTEGER(adr), TO_INTEGER(data));
 		elsif mem_stb='1' then
-			mem_sb(TO_INTEGER(adr), TO_INTEGER(data));
+			res := mem_sb(TO_INTEGER(adr), TO_INTEGER(data));
 		end if;
 	end if;
 end process;
