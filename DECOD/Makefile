@@ -32,7 +32,7 @@ decod.o :  decod.vhdl
 #decod_tb.o : decod_tb.vhdl fifo_generic.o  shift.o reg.o
 #	${GHDL} -a -v exec_tb.vhdl 
 
-decod : decod.o
+#decod : decod.o
 #	${GHDL} -e -v decod_tb
 #	${GHDL} -r decod_tb --vcd=decod.vcd
 

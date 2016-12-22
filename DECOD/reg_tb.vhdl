@@ -41,6 +41,11 @@ architecture Structurel of reg_tb is
       radr3		: in Std_Logic_Vector(3 downto 0);
       reg_v3		: out Std_Logic;
 
+      -- Read Port 4 32 bits
+      reg_rd4		: out Std_Logic_Vector(31 downto 0);
+      radr4		: in Std_Logic_Vector(3 downto 0);
+      reg_v4		: out Std_Logic;
+      
       -- read CSPR Port
       reg_cry		: out Std_Logic;
       reg_zero		: out Std_Logic;
@@ -107,6 +112,12 @@ architecture Structurel of reg_tb is
   signal radr3		:  std_logic_vector(3 downto 0);
   signal reg_v3		:  Std_Logic;
 
+  -- SIGNAL Read Posignal rt 4 32 bits
+  signal reg_rd4	:  std_logic_vector(31 downto 0);
+  signal radr4		:  std_logic_vector(3 downto 0);
+  signal reg_v4		:  Std_Logic;
+
+  
   -- signal read CSPR Port
   signal reg_cry		:  Std_Logic;
   signal reg_zero		:  Std_Logic;
@@ -143,65 +154,70 @@ begin
     port map (
  -- Write Port 1 prioritaire
       wdata1 => wdata1,
-      wadr1 => wadr1,
-      wen1 => wen1,
+      wadr1  => wadr1,
+      wen1   => wen1,
 
       -- Write Port 2 non prioritaire
       wdata2 =>wdata2,
-      wadr2 =>wadr2,
-      wen2 =>wen2,
+      wadr2  =>wadr2,
+      wen2   =>wen2,
 
       -- Write CSPR Port
-      wcry =>wcry,
-      wzero =>wzero,
-      wneg =>wneg,
-      wovr =>wovr,
+      wcry    =>wcry,
+      wzero   =>wzero,
+      wneg    =>wneg,
+      wovr    =>wovr,
       cspr_wb =>cspr_wb,
       
       -- Read Port 1 32 bits
       reg_rd1 =>reg_rd1,
-      radr1 =>radr1,
-      reg_v1 =>reg_v1,
+      radr1   =>radr1,
+      reg_v1  =>reg_v1,
 
       -- Read Port 2 32 bits
       reg_rd2 =>reg_rd2,
-      radr2 =>radr2,
-      reg_v2 =>reg_v2,
+      radr2   =>radr2,
+      reg_v2  =>reg_v2,
 
       -- Read Port 3 32 bits
       reg_rd3 =>reg_rd3,
-      radr3 =>radr3,
-      reg_v3 => reg_v3,
+      radr3   =>radr3,
+      reg_v3  => reg_v3,
 
+      -- Read Port 4 32 bits
+      reg_rd4 =>reg_rd4,
+      radr4   =>radr4,
+      reg_v4  => reg_v4,
+      
       -- read CSPR Port
-      reg_cry => reg_cry,
+      reg_cry  => reg_cry,
       reg_zero => reg_zero,
-      reg_neg => reg_neg,
+      reg_neg  => reg_neg,
       reg_cznv => reg_cznv,
-      reg_ovr => reg_ovr,
-      reg_vv => reg_vv,
+      reg_ovr  => reg_ovr,
+      reg_vv   => reg_vv,
       
       -- Invalidate Port 
       inval_adr1 => inval_adr1,
-      inval1 =>	inval1,
+      inval1     => inval1,
 
       inval_adr2 => inval_adr2,
-      inval2 =>	inval2,
+      inval2     => inval2,
 
       inval_czn => inval_czn,
       inval_ovr	=> inval_ovr,
 
       -- PC
-      reg_pc =>	reg_pc,
+      reg_pc  => reg_pc,
       reg_pcv => reg_pcv,	
-      inc_pc => inc_pc,	
+      inc_pc  => inc_pc,	
       
       -- global interface
       ck => ck,
       -- 0 faire reset 1 ne pas le faire
       reset_n => reset_n,	
-      vdd => vdd,
-      vss => vss	
+      vdd     => vdd,
+      vss     => vss	
 
 
   );

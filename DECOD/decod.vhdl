@@ -132,6 +132,11 @@ architecture Behavior OF Decod is
       radr3		: in Std_Logic_Vector(3 downto 0);
       reg_v3		: out Std_Logic;
 
+      -- Read Port 4 32 bits
+      reg_rd4		: out Std_Logic_Vector(31 downto 0);
+      radr4		: in Std_Logic_Vector(3 downto 0);
+      reg_v4		: out Std_Logic;
+      
       -- read CSPR Port
       reg_cry		: out Std_Logic;
       reg_zero		: out Std_Logic;
@@ -271,6 +276,11 @@ architecture Behavior OF Decod is
   signal radr3 : Std_Logic_Vector(3 downto 0);
   signal rdata3 : Std_Logic_Vector(31 downto 0);
   signal rvalid3 : Std_Logic;
+
+  signal radr4 : Std_Logic_Vector(3 downto 0);
+  signal rdata4 : Std_Logic_Vector(31 downto 0);
+  signal rvalid4 : Std_Logic;
+
 
 -- RF inval ports
   signal inval_exe_adr : Std_Logic_Vector(3 downto 0);

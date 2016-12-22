@@ -37,6 +37,12 @@ entity Reg is
     radr3		: in Std_Logic_Vector(3 downto 0);
     reg_v3		: out Std_Logic;
 
+    -- Read Port 4 32 bits
+    reg_rd4		: out Std_Logic_Vector(31 downto 0);
+    radr4		: in Std_Logic_Vector(3 downto 0);
+    reg_v4		: out Std_Logic;
+
+    
     -- read CSPR Port
     reg_cry		: out Std_Logic;
     reg_zero		: out Std_Logic;
@@ -170,7 +176,7 @@ begin
     
     adr_tmp := to_integer (unsigned (radr1));
     reg_rd1 <= r_reg (adr_tmp);
-    reg_v1  <= r_valid (1);
+    reg_v1  <= r_valid (adr_tmp);
     
     -- lecture port 2
     adr_tmp := to_integer ( unsigned (radr2));
@@ -181,6 +187,11 @@ begin
     adr_tmp := to_integer ( unsigned (radr3));
     reg_rd3 <= r_reg (adr_tmp);
     reg_v3  <= r_valid (adr_tmp);
+
+        -- lecture port
+    adr_tmp := to_integer ( unsigned (radr4));
+    reg_rd4 <= r_reg (adr_tmp);
+    reg_v4  <= r_valid (adr_tmp);
 
     --lecture cspr
     reg_cry  <= r_c;
