@@ -472,6 +472,10 @@ architecture Behavior OF Decod is
                 radr3		=> radr3,
                 reg_v3		=> rvalid3,
 
+                reg_rd4		=> rdata4,
+                radr4		=> radr4,
+                reg_v4		=> rvalid4,
+                
                 reg_cry		=> cry,
                 reg_zero	=> zero,
                 reg_neg		=> neg,
@@ -552,6 +556,11 @@ architecture Behavior OF Decod is
       variable rm_lu   : Std_logic_vector (3 downto 0);
       variable opcode  : Std_logic_vector (3 downto 0);
 
+      variable rd_reg : Std_logic_vector (31 downto 0);
+      variable rn_reg : Std_logic_vector (31 downto 0);
+      variable rm_reg : Std_logic_vector (31 downto 0);
+      variable op2_reg : Std_logic_vector (31 downto 0);
+      
       variable val_dec : Std_logic_vector (4 downto 0);
       variable op2     : Std_logic_vector (31 downto 0);       
       
@@ -630,13 +639,13 @@ architecture Behavior OF Decod is
             --registre
             --lire valeur registre
             --  ->stocker les 5 premiers bits dans val_dec
+              radr4 <= instruction (11 downto 8);
+              op2_reg := rdata4;    
+              val_dec := op2_reg (4 downto 0);
             end if;
 
           -- decodage operande2  
           end if;
-
-
-          
 
           
           case instruction (6 downto 5) is
@@ -711,6 +720,18 @@ architecture Behavior OF Decod is
 
           -- recuperer sortie du shifter
           op2 := shift_output;        
+
+
+          -- recuperer valeur contenue dans les registres
+          radr1 <= rd_lu;
+          rd_reg := rdata1;
+
+          radr2 <= rn_lu;
+          rn_reg := rdata2;
+
+          radr3 <= rm_lu;
+          rm_reg := rdata3;
+
 
           -- recuperer l'opcode de l'instruction
           -- mettre tout les signaux en sortie a la bonne valeur pour exe
