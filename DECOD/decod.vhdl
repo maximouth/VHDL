@@ -647,6 +647,18 @@ architecture Behavior OF Decod is
           -- decodage operande2  
           end if;
 
+
+
+          -- recuperer valeur contenue dans les registres
+          radr1 <= rd_lu;
+          rd_reg := rdata1;
+
+          radr2 <= rn_lu;
+          rn_reg := rdata2;
+
+          radr3 <= rm_lu;
+          rm_reg := rdata3;
+
           
           case instruction (6 downto 5) is
             -- ->mettre dans op2 la valeur de sortie du shifter
@@ -661,7 +673,7 @@ architecture Behavior OF Decod is
               cy2 <= '0';
 
               dec_sh_val <= val_dec;             
---              op1_sh <= --valeur de rm lu dans reg
+              op1_sh <= rm_reg; --valeur de rm lu dans reg
               
             --lsr
             when "01" =>
@@ -674,7 +686,7 @@ architecture Behavior OF Decod is
               cy2 <= '0';
 
               dec_sh_val <= val_dec;             
---              op1_sh <= --valeur de rm lu dans reg
+              op1_sh <= rm_reg; --valeur de rm lu dans reg
 
             --asr
             when "10" =>
@@ -687,7 +699,7 @@ architecture Behavior OF Decod is
               cy2 <= '0';
 
               dec_sh_val <= val_dec;             
---              op1_sh <= --valeur de rm lu dans reg
+              op1_sh <= rm_reg;--valeur de rm lu dans reg
 
 
             --ror
@@ -701,7 +713,7 @@ architecture Behavior OF Decod is
               cy2 <= '0';
 
               dec_sh_val <= val_dec;             
---              op1_sh <= --valeur de rm lu dans reg
+              op1_sh <= rm_reg;--valeur de rm lu dans reg
 
             when others =>
               dec_sh_lsl <= '1';
@@ -722,17 +734,6 @@ architecture Behavior OF Decod is
           op2 := shift_output;        
 
 
-          -- recuperer valeur contenue dans les registres
-          radr1 <= rd_lu;
-          rd_reg := rdata1;
-
-          radr2 <= rn_lu;
-          rn_reg := rdata2;
-
-          radr3 <= rm_lu;
-          rm_reg := rdata3;
-
-
           -- recuperer l'opcode de l'instruction
           -- mettre tout les signaux en sortie a la bonne valeur pour exe
           -- remplir le fifo avec les bons trucs
@@ -740,6 +741,17 @@ architecture Behavior OF Decod is
           case instruction (24 downto 21) is
             -- AND
             when "0000" =>
+              --alu operands
+              dec_op1 <= rn_reg; 
+              dec_op2 <= op2;
+
+              dec_exe_dest <= rd_lu;
+              dec_flag_wb <= '0';
+              dec_flag_wb <= instruction (20);
+
+              -- retirer la partie shift et la reporter sur EXE
+              -- revoir comment marche EXE
+              
             -- EOR
             when "0001" =>
             -- SUB
