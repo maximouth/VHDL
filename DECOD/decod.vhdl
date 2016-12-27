@@ -487,19 +487,20 @@ architecture Behavior OF Decod is
 
 -- FSM
 
-    dec_pop <= '0';
-    dec2exe_push <= '0';
-    blink <= '0';
-    mtrans_shift <= '0';
-    dec2if_push	<= '0';
-    inc_pc <= '0';
+    dec_pop <= '0';      -- put the instruction into fifo32
+                         -- to decode and execute it
+    dec2exe_push <= '0'; -- put something into the fifo to EXE
+    blink <= '0';        -- make a link 
+    mtrans_shift <= '0'; -- make a multiple transfert 
+    dec2if_push	<= '0';  -- put nex address in fifo
+    inc_pc <= '0';       -- pc += 4
 
     
     --state machine process.
     process (cur_state, dec2if_full, cond, condv, operv,
              dec2exe_full, if2dec_empty, reg_pcv, bl_i,
              branch_t, and_i, eor_i, sub_i, rsb_i, add_i,
-             adc_i, sbc_i, rsc_i, orr_i, mov_i, bic_i,
+              adc_i, sbc_i, rsc_i, orr_i, mov_i, bic_i,
              mvn_i, ldr_i, ldrb_i, ldm_i, stm_i, if_ir,
              mtrans_rd, mtrans_mask_shift)
 
@@ -531,6 +532,7 @@ architecture Behavior OF Decod is
           if if2dec_empty = '1' and dec2exe_full = '1' then
             if dec2if_full = '0' then
               inc_pc <= '1';
+              dec2if_push <= '1';
               --endif dec2if_full
             end if;
           --endif T1
@@ -575,7 +577,9 @@ architecture Behavior OF Decod is
 
           -- if pred true execute instruction
           if cond = '1' then
-
+            if if2dec_empty = '1' then
+              dec_pop <= '1';
+            end if;
           -- throw it away
           else
             
@@ -590,7 +594,7 @@ architecture Behavior OF Decod is
             blink <= '1';
           else
             -- T5 to BRANCH
-          if instruction (24) = '0' then
+          if instruction (27) = '1' and instruction (24) = '0' then
           next_state <= BRANCH;                       
           --end if T5
           end if;
@@ -601,11 +605,11 @@ architecture Behavior OF Decod is
         when LINK =>        
           -- T1 to BRANCH
           next_state <= BRANCH;
-
           
         when BRANCH =>
            -- T1 to BRANCH
-          if if2dec_empty = '1' then
+          if if2dec_empty = '1' then -- si on a pas l'intruction dans
+                                     -- le fifo
             next_state <= BRANCH;
           else
             -- T2 to RUN
@@ -655,180 +659,180 @@ architecture Behavior OF Decod is
 
         -- traitement 
 
-        -- si la condition est bonne continuer le decodage
-        if cond = '1' then
-          --recuperer valeur
-          opcode := instruction (24 downto 21);
-          rn_lu  := instruction (19 downto 16);
-          rd_lu  := instruction (15 downto 12);
+        ---- si la condition est bonne continuer le decodage
+        --if cond = '1' then
+        --  --recuperer valeur
+        --  opcode := instruction (24 downto 21);
+        --  rn_lu  := instruction (19 downto 16);
+        --  rd_lu  := instruction (15 downto 12);
 
-          -- decoder l'operande 2
-          if instruction (25) = '1' then
-            --> immediat
-            -- faire un shift rotation de valeur inst (11 downto 8)
-            -- recuperer valeur dans variable 32 bit (op1 ou 2 dans fifo129)
+        --  -- decoder l'operande 2
+        --  if instruction (25) = '1' then
+        --    --> immediat
+        --    -- faire un shift rotation de valeur inst (11 downto 8)
+        --    -- recuperer valeur dans variable 32 bit (op1 ou 2 dans fifo129)
             
-          else
-            --> registre
-            rm_lu := instruction (3 downto 0);
+        --  else
+        --    --> registre
+        --    rm_lu := instruction (3 downto 0);
 
-            if instruction (4) = '0' then
-              --valeur
-              val_dec := instruction (11 downto 7);
-            else
-            --registre
-            --lire valeur registre
-            --  ->stocker les 5 premiers bits dans val_dec
-              radr4 <= instruction (11 downto 8);
-              op2_reg := rdata4;    
-              val_dec := op2_reg (4 downto 0);
-            end if;
+        --    if instruction (4) = '0' then
+        --      --valeur
+        --      val_dec := instruction (11 downto 7);
+        --    else
+        --    --registre
+        --    --lire valeur registre
+        --    --  ->stocker les 5 premiers bits dans val_dec
+        --      radr4 <= instruction (11 downto 8);
+        --      op2_reg := rdata4;    
+        --      val_dec := op2_reg (4 downto 0);
+        --    end if;
 
-          -- decodage operande2  
-          end if;
+        --  -- decodage operande2  
+        --  end if;
 
 
 
-          -- recuperer valeur contenue dans les registres
-          radr1 <= rd_lu;
-          rd_reg := rdata1;
+        --  -- recuperer valeur contenue dans les registres
+        --  radr1 <= rd_lu;
+        --  rd_reg := rdata1;
 
-          radr2 <= rn_lu;
-          rn_reg := rdata2;
+        --  radr2 <= rn_lu;
+        --  rn_reg := rdata2;
 
-          radr3 <= rm_lu;
-          rm_reg := rdata3;
+        --  radr3 <= rm_lu;
+        --  rm_reg := rdata3;
 
           
-          case instruction (6 downto 5) is
-            -- ->mettre dans op2 la valeur de sortie du shifter
-            -- lsl
-            when "00" =>
-              dec_sh_lsl <= '1';
-              dec_sh_lsr <= '0';
-              dec_sh_asr <= '0';
-              dec_sh_ror <= '0';
-              dec_sh_rrx <= '0';
-              cy1 <= '0';
-              cy2 <= '0';
+        --  case instruction (6 downto 5) is
+        --    -- ->mettre dans op2 la valeur de sortie du shifter
+        --    -- lsl
+        --    when "00" =>
+        --      dec_sh_lsl <= '1';
+        --      dec_sh_lsr <= '0';
+        --      dec_sh_asr <= '0';
+        --      dec_sh_ror <= '0';
+        --      dec_sh_rrx <= '0';
+        --      cy1 <= '0';
+        --      cy2 <= '0';
 
-              dec_sh_val <= val_dec;             
-              op1_sh <= rm_reg; --valeur de rm lu dans reg
+        --      dec_sh_val <= val_dec;             
+        --      op1_sh <= rm_reg; --valeur de rm lu dans reg
               
-            --lsr
-            when "01" =>
-              dec_sh_lsl <= '0';
-              dec_sh_lsr <= '1';
-              dec_sh_asr <= '0';
-              dec_sh_ror <= '0';
-              dec_sh_rrx <= '0';
-              cy1 <= '0';
-              cy2 <= '0';
+        --    --lsr
+        --    when "01" =>
+        --      dec_sh_lsl <= '0';
+        --      dec_sh_lsr <= '1';
+        --      dec_sh_asr <= '0';
+        --      dec_sh_ror <= '0';
+        --      dec_sh_rrx <= '0';
+        --      cy1 <= '0';
+        --      cy2 <= '0';
 
-              dec_sh_val <= val_dec;             
-              op1_sh <= rm_reg; --valeur de rm lu dans reg
+        --      dec_sh_val <= val_dec;             
+        --      op1_sh <= rm_reg; --valeur de rm lu dans reg
 
-            --asr
-            when "10" =>
-              dec_sh_lsl <= '0';
-              dec_sh_lsr <= '0';
-              dec_sh_asr <= '1';
-              dec_sh_ror <= '0';
-              dec_sh_rrx <= '0';
-              cy1 <= '0';
-              cy2 <= '0';
+        --    --asr
+        --    when "10" =>
+        --      dec_sh_lsl <= '0';
+        --      dec_sh_lsr <= '0';
+        --      dec_sh_asr <= '1';
+        --      dec_sh_ror <= '0';
+        --      dec_sh_rrx <= '0';
+        --      cy1 <= '0';
+        --      cy2 <= '0';
 
-              dec_sh_val <= val_dec;             
-              op1_sh <= rm_reg;--valeur de rm lu dans reg
-
-
-            --ror
-            when "11" =>
-              dec_sh_lsl <= '0';
-              dec_sh_lsr <= '0';
-              dec_sh_asr <= '0';
-              dec_sh_ror <= '1';
-              dec_sh_rrx <= '0';
-              cy1 <= '0';
-              cy2 <= '0';
-
-              dec_sh_val <= val_dec;             
-              op1_sh <= rm_reg;--valeur de rm lu dans reg
-
-            when others =>
-              dec_sh_lsl <= '1';
-              dec_sh_lsr <= '0';
-              dec_sh_asr <= '0';
-              dec_sh_ror <= '0';
-              dec_sh_rrx <= '0';
-              cy1 <= '0';
-              cy2 <= '0';
-
-              dec_sh_val <= "00000";             
-              op1_sh     <= "00000000000000000000000000000000"; 
-
-          end case;
+        --      dec_sh_val <= val_dec;             
+        --      op1_sh <= rm_reg;--valeur de rm lu dans reg
 
 
-          -- recuperer sortie du shifter
-          op2 := shift_output;        
+        --    --ror
+        --    when "11" =>
+        --      dec_sh_lsl <= '0';
+        --      dec_sh_lsr <= '0';
+        --      dec_sh_asr <= '0';
+        --      dec_sh_ror <= '1';
+        --      dec_sh_rrx <= '0';
+        --      cy1 <= '0';
+        --      cy2 <= '0';
+
+        --      dec_sh_val <= val_dec;             
+        --      op1_sh <= rm_reg;--valeur de rm lu dans reg
+
+        --    when others =>
+        --      dec_sh_lsl <= '1';
+        --      dec_sh_lsr <= '0';
+        --      dec_sh_asr <= '0';
+        --      dec_sh_ror <= '0';
+        --      dec_sh_rrx <= '0';
+        --      cy1 <= '0';
+        --      cy2 <= '0';
+
+        --      dec_sh_val <= "00000";             
+        --      op1_sh     <= "00000000000000000000000000000000"; 
+
+        --  end case;
 
 
-          -- recuperer l'opcode de l'instruction
-          -- mettre tout les signaux en sortie a la bonne valeur pour exe
-          -- remplir le fifo avec les bons trucs
+        --  -- recuperer sortie du shifter
+        --  op2 := shift_output;        
 
-          case instruction (24 downto 21) is
-            -- AND
-            when "0000" =>
-              --alu operands
-              dec_op1 <= rn_reg; 
-              dec_op2 <= op2;
 
-              dec_exe_dest <= rd_lu;
-              dec_flag_wb <= '0';
-              dec_flag_wb <= instruction (20);
+        --  -- recuperer l'opcode de l'instruction
+        --  -- mettre tout les signaux en sortie a la bonne valeur pour exe
+        --  -- remplir le fifo avec les bons trucs
 
-              -- retirer la partie shift et la reporter sur EXE
-              -- revoir comment marche EXE
+        --  case instruction (24 downto 21) is
+        --    -- AND
+        --    when "0000" =>
+        --      --alu operands
+        --      dec_op1 <= rn_reg; 
+        --      dec_op2 <= op2;
+
+        --      dec_exe_dest <= rd_lu;
+        --      dec_flag_wb <= '0';
+        --      dec_flag_wb <= instruction (20);
+
+        --      -- retirer la partie shift et la reporter sur EXE
+        --      -- revoir comment marche EXE
               
-            -- EOR
-            when "0001" =>
-            -- SUB
-            when "0010" =>
-            -- RSB
-            when "0011" =>
-            -- ADD
-            when "0100" =>
-            -- ADC
-            when "0101" =>
-            -- SBC
-            when "0110" =>
-            -- RSC
-            when "0111" =>
-            -- TST
-            when "1000" =>
-            -- TEQ
-            when "1001" =>
-            -- CMP
-            when "1010" =>
-            -- CMN
-            when "1011" =>
-            -- ORR
-            when "1100" =>
-            -- MOV
-            when "1101" =>
-            -- BIC
-            when "1110" =>
-            -- MVN
-            when "1111" =>
-            when others =>
+        --    -- EOR
+        --    when "0001" =>
+        --    -- SUB
+        --    when "0010" =>
+        --    -- RSB
+        --    when "0011" =>
+        --    -- ADD
+        --    when "0100" =>
+        --    -- ADC
+        --    when "0101" =>
+        --    -- SBC
+        --    when "0110" =>
+        --    -- RSC
+        --    when "0111" =>
+        --    -- TST
+        --    when "1000" =>
+        --    -- TEQ
+        --    when "1001" =>
+        --    -- CMP
+        --    when "1010" =>
+        --    -- CMN
+        --    when "1011" =>
+        --    -- ORR
+        --    when "1100" =>
+        --    -- MOV
+        --    when "1101" =>
+        --    -- BIC
+        --    when "1110" =>
+        --    -- MVN
+        --    when "1111" =>
+        --    when others =>
               
-          -- fin gestion instruction
-          end case;
+        --  -- fin gestion instruction
+        --  end case;
           
-        -- if condition bonne
-        end if;
+        ---- if condition bonne
+        --end if;
         
         
         -- prendre la valeur dans instruction 
