@@ -70,4 +70,6 @@ exec_tb : exec_tb.o
 
 
 clean :
-	rm *.o *#  *vcd *~ work-obj93.cf alu_tb mux_tb fifo_tb exec_tb unknown_tb shift_tb
+	rm -f *.o *#  
+	rm -f *vcd *~
+	rm -f work-obj93.cf alu_tb mux_tb fifo_tb exec_tb unknown_tb shift_tb
