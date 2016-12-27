@@ -2,6 +2,17 @@ GHDL=ghdl
 all : reg_tb decod
 
 # compil fifo
+fifo_generic.o : fifo_generic.vhdl
+	${GHDL} -a -v fifo_generic.vhdl
+
+fifo_tb.o : fifo_tb.vhdl fifo_generic.o
+	${GHDL} -a -v fifo_tb.vhdl 
+
+fifo_tb : fifo_tb.o
+	${GHDL} -e -v fifo_tb
+	${GHDL} -r fifo_tb --vcd=fifo.vcd
+
+# compil fifo
 reg.o : reg.vhdl
 	${GHDL} -a -v reg.vhdl
 
@@ -29,14 +40,15 @@ shift_tb : shift_tb.o
 decod.o :  decod.vhdl
 	${GHDL} -a -v decod.vhdl 
 
-#decod_tb.o : decod_tb.vhdl fifo_generic.o  shift.o reg.o
-#	${GHDL} -a -v exec_tb.vhdl 
+decod_tb.o : decod_tb.vhdl fifo_generic.o reg.o decod.o
+	${GHDL} -a -v decod_tb.vhdl 
 
-#decod : decod.o
-#	${GHDL} -e -v decod_tb
-#	${GHDL} -r decod_tb --vcd=decod.vcd
+decod : decod_tb.o
+	${GHDL} -e -v decod_tb
+	${GHDL} -r decod_tb --vcd=decod.vcd
 
 
 
 clean :
-	rm *.o *#  *vcd *~ work-obj93.cf reg_tb decod_tb shift_tb 
+	rm -f *.o *#  *vcd *~
+	rm -f work-obj93.cf reg_tb decod_tb shift_tb 
