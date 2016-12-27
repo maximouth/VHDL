@@ -487,6 +487,14 @@ architecture Behavior OF Decod is
 
 -- FSM
 
+    dec_pop <= '0';
+    dec2exe_push <= '0';
+    blink <= '0';
+    mtrans_shift <= '0';
+    dec2if_push	<= '0';
+    inc_pc <= '0';
+
+    
     --state machine process.
     process (cur_state, dec2if_full, cond, condv, operv,
              dec2exe_full, if2dec_empty, reg_pcv, bl_i,
@@ -494,16 +502,13 @@ architecture Behavior OF Decod is
              adc_i, sbc_i, rsc_i, orr_i, mov_i, bic_i,
              mvn_i, ldr_i, ldrb_i, ldm_i, stm_i, if_ir,
              mtrans_rd, mtrans_mask_shift)
+
+      variable cond    : Std_Logic;
+
     begin
       case cur_state is
 
         when FETCH =>
-          dec_pop <= '0';
-          dec2exe_push <= '0';
-          blink <= '0';
-          mtrans_shift <= '0';
-          dec2if_push	<= '0';
-          inc_pc <= '0';
           
           -- T1 to FETCH
           if dec2if_full = '1' then
@@ -521,64 +526,19 @@ architecture Behavior OF Decod is
           end if;
 
         when RUN =>
-          dec_pop <= '0';
-          dec2exe_push <= '0';
-          blink <= '0';
-          mtrans_shift <= '0';
-          dec2if_push	<= '0';
-          inc_pc <= '0';
 
-          --T1 to RUN
-
-        when BRANCH =>
-
-
-        when LINK =>
+    --T1 to RUN
+          if if2dec_empty = '1' and dec2exe_full = '1' then
+            if dec2if_full = '0' then
+              inc_pc <= '1';
+              --endif dec2if_full
+            end if;
+          --endif T1
+          end if;
 
 
-        when MTRANS =>
-
-
-
-      end case;
-    -- state machine
-    end process;
-
-    -- decod process
-
-    process (ck)
-
-      variable cond    : Std_Logic;
-      variable rd_lu   : Std_logic_vector (3 downto 0);
-      variable rn_lu   : Std_logic_vector (3 downto 0);
-      variable rm_lu   : Std_logic_vector (3 downto 0);
-      variable opcode  : Std_logic_vector (3 downto 0);
-
-      variable rd_reg : Std_logic_vector (31 downto 0);
-      variable rn_reg : Std_logic_vector (31 downto 0);
-      variable rm_reg : Std_logic_vector (31 downto 0);
-      variable op2_reg : Std_logic_vector (31 downto 0);
-      
-      variable val_dec : Std_logic_vector (4 downto 0);
-      variable op2     : Std_logic_vector (31 downto 0);       
-      
-
-    begin
-
-      if (rising_edge(ck)) then
-        if (reset_n = '0') then
-          cur_state <= Run;
-        else
-          cur_state <= next_state;
-        --end reset
-        end if;
-
-
-        -- traitement 
-
-        --> il faut recuperer l'instruction mais ou?
-
-        -- regarder la condition d'execution
+          -- T2/T3 to RUN
+           -- regarder la condition d'execution
         case instruction (31 downto 28) is 
           --EQ
           when "0000" => cond := exe_z and '1';
@@ -612,6 +572,88 @@ architecture Behavior OF Decod is
           when "1110" => cond := '1';
           when others => cond := '0';
         end case;
+
+          -- if pred true execute instruction
+          if cond = '1' then
+
+          -- throw it away
+          else
+            
+          --end if cond = 1
+          end if;
+
+          next_state <= RUN;           
+
+          -- T4 to LINK
+          if instruction (27) = '1' and instruction (24) = '1' then
+            next_state <= LINK;           
+            blink <= '1';
+          else
+            -- T5 to BRANCH
+          if instruction (24) = '0' then
+          next_state <= BRANCH;                       
+          --end if T5
+          end if;
+          
+        --end if t4          
+        end  if;
+      
+        when LINK =>        
+          -- T1 to BRANCH
+          next_state <= BRANCH;
+
+          
+        when BRANCH =>
+           -- T1 to BRANCH
+          if if2dec_empty = '1' then
+            next_state <= BRANCH;
+          else
+            -- T2 to RUN
+            next_state <= RUN;
+          -- end if T1
+          end if;
+          
+          
+
+        when MTRANS =>
+
+
+
+      end case;
+    -- state machine
+    end process;
+
+    -- decod process
+
+    process (ck)
+
+
+      variable rd_lu   : Std_logic_vector (3 downto 0);
+      variable rn_lu   : Std_logic_vector (3 downto 0);
+      variable rm_lu   : Std_logic_vector (3 downto 0);
+      variable opcode  : Std_logic_vector (3 downto 0);
+
+      variable rd_reg : Std_logic_vector (31 downto 0);
+      variable rn_reg : Std_logic_vector (31 downto 0);
+      variable rm_reg : Std_logic_vector (31 downto 0);
+      variable op2_reg : Std_logic_vector (31 downto 0);
+      
+      variable val_dec : Std_logic_vector (4 downto 0);
+      variable op2     : Std_logic_vector (31 downto 0);       
+      
+
+    begin
+
+      if (rising_edge(ck)) then
+        if (reset_n = '0') then
+          cur_state <= Run;
+        else
+          cur_state <= next_state;
+        --end reset
+        end if;
+
+
+        -- traitement 
 
         -- si la condition est bonne continuer le decodage
         if cond = '1' then
