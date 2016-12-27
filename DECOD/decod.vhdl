@@ -394,25 +394,6 @@ architecture Behavior OF Decod is
   signal cur_state, next_state : state_type;
 
   begin
-
-    -- composant 1
-    shift_0: shift
-      port map (
-        op1 => op1_sh,
-        dec_shift_lsl => dec_sh_lsl,
-        dec_shift_lsr => dec_sh_lsr,
-        dec_shift_asr => dec_sh_asr,
-        dec_shift_ror => dec_sh_ror,
-        dec_shift_rrx => dec_sh_rrx,
-
-        dec_cy => cy1,
-        shift_cy => cy2,
-
-        dec_shift_val => dec_sh_val,
-        shift_output => shift_output
-        );
-
-
     
     dec2exec : fifo
       generic map (WIDTH => 129)
@@ -521,16 +502,33 @@ architecture Behavior OF Decod is
           dec2exe_push <= '0';
           blink <= '0';
           mtrans_shift <= '0';
-
-          if dec2if_full = '0' and reg_pcv = '1' then
+          dec2if_push	<= '0';
+          inc_pc <= '0';
+          
+          -- T1 to FETCH
+          if dec2if_full = '1' then
+            next_state <= FETCH;
+          else
+          -- T2 to RUN
+          if reg_pcv = '1' then
             next_state <= RUN;
             dec2if_push	<= '1';
             inc_pc <= '1';
           else
+          -- Reg PC invalid -> Stay in FETCH state
+            next_state <= FETCH;           
+          end if;
           end if;
 
         when RUN =>
+          dec_pop <= '0';
+          dec2exe_push <= '0';
+          blink <= '0';
+          mtrans_shift <= '0';
+          dec2if_push	<= '0';
+          inc_pc <= '0';
 
+          --T1 to RUN
 
         when BRANCH =>
 
