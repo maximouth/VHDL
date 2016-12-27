@@ -18,8 +18,8 @@ ENTITY fifo IS
 		full		: out std_logic;
 		empty		: out std_logic;
 
-		reset_n	: in std_logic;
-		ck			: in std_logic;
+		reset_n	:       in std_logic;
+		ck		: in std_logic;
 		vdd		: in bit;
 		vss		: in bit
 	);

@@ -118,7 +118,7 @@ begin
       -- incrementer pc 
       if inc_pc = '1' then
         cpt := cpt + 4;
-        r_reg (14) <= Std_Logic_Vector (to_signed ( cpt , 32));
+        r_reg (15) <= Std_Logic_Vector (to_signed ( cpt , 32));
       end if;       
 
       -- changer la validité du port 1
