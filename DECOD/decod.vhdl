@@ -633,15 +633,17 @@ begin
 
   process (ck)
 
-
+    variable tmp     : Std_logic_vector (31 downto 0);
+    
     variable rd_lu   : Std_logic_vector (3 downto 0);
     variable rn_lu   : Std_logic_vector (3 downto 0);
     variable rm_lu   : Std_logic_vector (3 downto 0);
     variable opcode  : Std_logic_vector (3 downto 0);
 
-    variable rd_reg : Std_logic_vector (31 downto 0);
-    variable rn_reg : Std_logic_vector (31 downto 0);
-    variable rm_reg : Std_logic_vector (31 downto 0);
+    variable rd_reg  : Std_logic_vector (31 downto 0);
+    variable rs_reg  : Std_logic_vector (31 downto 0);
+    variable rn_reg  : Std_logic_vector (31 downto 0);
+    variable rm_reg  : Std_logic_vector (31 downto 0);
     variable op2_reg : Std_logic_vector (31 downto 0);
     
     variable val_dec : Std_logic_vector (4 downto 0);
@@ -709,15 +711,146 @@ begin
           if blink = '1' then
             -- put the right thing to EXE to wb in r14
 
+            dec_op1       <= reg_pc;
+            dec_comp_op1  <= '0';
+
+            dec_op2       <= x"00_00_00_04";
+            dec_comp_op2  <= '0';
+
+            dec_exe_dest  <= x"D";
+            dec_exe_wb    <= '1';
+            dec_flag_wb   <= '0';
+
+            dec_alu_add   <= '1';
+            dec_alu_and   <= '0';
+            dec_alu_or    <= '0';
+            dec_alu_xor   <= '0';
+            dec_alu_cy    <= '0';
+
+            dec_shift_lsl <= '1';
+            dec_shift_lsr <= '0';
+            dec_shift_asr <= '0';
+            dec_shift_ror <= '0';
+            dec_shift_rrx <= '0';
+            dec_shift_val <= "00000";
+            dec_cy <= '0';
+            
             blink <= '0';
           else
             
             -- pc = pc + 8 + (offset * 4) "decalage gauche 2"
             -- mettre les fils en sortie avec wb sur r15
 
+            tmp := reg_pc;
+            tmp := Std_logic_vector (unsigned (tmp) + 4);
+            
+            dec_op1       <= tmp;
+            dec_comp_op1  <= '0';
+
+            dec_op2       <= "00000000" & dout32 (23 downto 0);
+            dec_comp_op2  <= '0';
+
+            dec_exe_dest  <= x"E";
+            dec_exe_wb    <= '1';
+            dec_flag_wb   <= '0';
+
+            dec_alu_add   <= '1';
+            dec_alu_and   <= '0';
+            dec_alu_or    <= '0';
+            dec_alu_xor   <= '0';
+            dec_alu_cy    <= '0';
+
+            dec_shift_lsl <= '1';
+            dec_shift_lsr <= '0';
+            dec_shift_asr <= '0';
+            dec_shift_ror <= '0';
+            dec_shift_rrx <= '0';
+            dec_shift_val <= "00010";
+            dec_cy <= '0';
+            
           -- end if link
           end if;
 
+          --acces memoire
+          if dout32 (27) = '0' and dout32 (26) = '1'  then
+          
+          ------- ********************************************** -----
+          ------- ********************************************** -----
+          --           rajouter acces memoire
+          --           dout32 (27) = 0
+          --           dout32 (26) = 1
+          --
+          --           rajouter :
+          --                -> pré post indexation dout32 (24)
+          --                -> UP down dout32 (23) 
+          --
+          --
+          ------- ********************************************** -----
+          ------- ********************************************** -----
+
+            
+            if dout32 (20) = '1' then
+              -- load
+              dec_mem_sb <= '0';
+              dec_mem_sw <= '0';
+
+              dec_mem_lb <= dout32 (22);
+              dec_mem_lw <= not ( dout32 (22) );              
+              
+            else
+              -- store
+              dec_mem_lb <= '0';
+              dec_mem_lw <= '0';
+
+              dec_mem_sb <= dout32 (22);
+              dec_mem_sw <= not ( dout32 (22) );
+
+            --end load or store?
+            end if;
+
+            --get the address in rn 
+            radr1  <= dout32 (19 downto 16);
+            rn_reg := rdata1;
+
+            dec_mem_dest <= dout32 (15 downto 12);
+            dec_mem_data <= rn_reg;
+
+
+            -- write back
+            if dout32 (21) = '1' then
+
+              dec_op1       <= rn_reg;
+
+              dec_comp_op1  <= '0';
+              dec_comp_op2  <= '0';
+
+              dec_alu_cy    <= '0';
+              
+              dec_exe_wb    <= '1';
+              dec_flag_wb   <= '0';
+              dec_exe_dest  <= dout32 (15 downto 12); 
+
+              dec_shift_val <= '0' & x"0" ;
+              dec_shift_lsl <= '1';
+              dec_shift_lsr <= '0';
+              dec_shift_asr <= '0';
+              dec_shift_ror <= '0';
+              dec_shift_rrx <= '0';
+              dec_cy        <= '0';
+              
+              if dout32 (22) = '1' then
+                -- byte
+                dec_op2 <= x"00_00_00_01"; 
+              else
+                --word
+                dec_op2 <= x"00_00_00_04"; 
+              end if;
+            -- end write back
+            end if;
+
+            
+          -- fin acces memoire
+          end if;
           
         else
           --decode the instruction
@@ -733,76 +866,203 @@ begin
             -- dout32 (11 downto 8) into shift dec
             -- shift_rot <= '1';
 
+            dec_op2 <= x"00_00_00" & dout32 (7  downto 0);
+            val_dec := '0' & dout32 (11 downto 8);
+
+            
           else
             --> registre
+
+               --get the value in rm
+              radr2  <= dout32 (3 downto 0);
+              rm_reg := rdata2;
+
+            
             if dout32 (4) = '1' then
               -- case value into reg (4 downto 0) = value shift
+
+              ----------- ************************************ ------
+              ----------- ************************************ ------
+              ----------- charger la valeur de reg et mettre   ------
+              ----------- les 5 premiers bits dans val_dec     ------
+              ----------- ************************************ ------
+              ----------- ************************************ ------
+           
+              --get the value in rs for shift value
+              radr3  <= dout32 (11 downto 8);
+              rs_reg := rdata3;
+              val_dec := rs_reg (4 downto 0);
+              
               
             else
               -- case value dout (11 downto 7)  = value shift 
-
+              val_dec := dout32 (11 downto 7);
+              
             -- endif dout32 (4) = 1  
             end if;
             
           --end if operande 2
           end if;
 
+          -- init value for everyone
+          dec_shift_lsl <= '0';
+          dec_shift_lsr <= '0';
+          dec_shift_asr <= '0';
+          dec_shift_ror <= '0';
+          dec_shift_rrx <= '0';
+          dec_shift_val <= val_dec;
+          dec_cy <= '0';
 
+          dec_comp_op2 <= '0';
+          dec_alu_cy   <= '0';
+          
           -- put the right thing into all of the op2 of EXEC
           case dout32 (6 downto 5) is
             --lsl
             when "00" =>                  
-
+              dec_shift_lsl <= '1';
             -- lsr
             when "01" =>
-              
+              dec_shift_lsr <= '1';
             --asr
             when "10" =>
-
+              dec_shift_asr <= '1';
             --ror
             when "11" =>
-              
-            when others =>
+              dec_shift_ror <= '1';              
+            when others => --erreur
               
           -- end case on shift's type  
           end case;
 
+
+          -- put the right flag midify or not
+          dec_flag_wb <= dout32 (20);
+
+
+          ----------- ************************************ ------
+          ----------- ************************************ ------
+          ----------- mettre tout les entres de l'alu a 0 et
+          ----------- mettre a 1 dans le case (comme shift)
+          -----------
+          ----------- lire dans le banc de registre les valeur
+          ----------- des registres a utiliser
+          ----------- mettre rd comme valeur a dec_exe_dest
+          -----------
+          ----------- -> pour TST TEQ CMP CMN :
+          ----------- verifier que mise jour flag = 1
+          ----------- mettre  un dec_exe_dest indiferent
+          ----------- dec_exe_wb a 0
+          -----------
+          ----------- si rien oublié c'est bon
+          ----------- ************************************ ------
+          ----------- ************************************ ------
+
+          dec_alu_add   <= '0';
+          dec_alu_and   <= '0';
+          dec_alu_or    <= '0';
+          dec_alu_xor   <= '0';
+          dec_alu_cy    <= '0';
+          
+          -- get the value in rn
+          radr1  <= dout32 (19 downto 16);
+          rn_reg := rdata1;
+
+          dec_op1      <= rn_reg;
+          dec_comp_op1 <= '0';
+
+          dec_op2      <= rm_reg;
+          dec_comp_op2 <= '0';
+
+          dec_exe_dest <= dout32 (15 downto 12);
+          dec_exe_wb   <= '1';
+
+          dec_flag_wb <= dout32 (20);
+
+
+          
           -- now put all the right wire and things into fifo129 and
           -- to EXEC
           case instruction (24 downto 21) is
             -- AND
             when "0000" =>
-            --alu operands
+              --alu operands
+              dec_alu_and   <= '1';
+
             -- EOR
             when "0001" =>
+              dec_alu_xor   <= '1';
+              
             -- SUB
             when "0010" =>
+              dec_alu_add   <= '1';
+              dec_comp_op1  <= '1';
+              
             -- RSB
             when "0011" =>
+              dec_alu_add   <= '1';
+              dec_comp_op2  <= '1';
+              
             -- ADD
             when "0100" =>
+              dec_alu_add   <= '1';
+
             -- ADC
             when "0101" =>
+              dec_alu_add   <= '1';
+              dec_alu_cy <= '1';              
+              
             -- SBC
             when "0110" =>
+
             -- RSC
             when "0111" =>
+
             -- TST
             when "1000" =>
+              dec_exe_wb  <= '0';
+              dec_flag_wb <= '1';
+              dec_alu_and <= '1';
+              
             -- TEQ
             when "1001" =>
+              dec_exe_wb  <= '0';
+              dec_flag_wb <= '1';
+              dec_alu_xor <= '1';
+                             
             -- CMP
             when "1010" =>
+              dec_exe_wb   <= '0';
+              dec_flag_wb  <= '1';
+              dec_alu_add  <= '1';
+              dec_comp_op1 <= '1';
+                           
             -- CMN
             when "1011" =>
+              dec_exe_wb  <= '0';
+              dec_flag_wb <= '1';
+              dec_alu_and <= '1';
+
             -- ORR
             when "1100" =>
+              dec_alu_or   <= '1';              
+              
             -- MOV
             when "1101" =>
+              dec_op1 <= x"00_00_00_00";
+              dec_alu_add <= '1';
+              
             -- BIC
             when "1110" =>
+              dec_alu_and  <= '1';
+              dec_comp_op2 <= '1';
+              
             -- MVN
             when "1111" =>
+              dec_op1 <= x"00_00_00_00";
+              dec_alu_add <= '1';
+              dec_comp_op2 <= '1';
+              
             when others =>
               
           -- fin gestion instruction
