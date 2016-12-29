@@ -516,9 +516,12 @@ begin
         -- T1 to FETCH
         if dec2if_full = '1' then
           next_state <= FETCH;
+          report "in t1 FETCH";
         else
+
           -- T2 to RUN
           if reg_pcv = '1' then
+            report "in t2 FETCH";       
             next_state <= RUN;
             dec2if_push	<= '1';
             inc_pc <= '1';
@@ -529,86 +532,99 @@ begin
         end if;
 
       when RUN =>
-
+        report "in run";       
         --T1 to RUN
+
+        next_state <= RUN;
+        
         if if2dec_empty = '1' and dec2exe_full = '1' then
+          report "in T1 run";       
           if dec2if_full = '0' then
             inc_pc <= '1';
             dec2if_push <= '1';
           --endif dec2if_full
           end if;
+          
+        else
+          report "in T2/T3 run";       
+          -- T2/T3 to RUN
+          -- regarder la condition d'execution
+          case instruction (31 downto 28) is 
+            --EQ
+            when "0000" => cond := exe_z and '1';
+            --NE
+            when "0001" => cond := not (exe_z and '0');
+            --CS
+            when "0010" => cond := exe_c and '1';
+            --CC
+            when "0011" => cond := not (exe_c and '1');
+            -- MI
+            when "0100" => cond := exe_n and '1';
+            -- PL
+            when "0101" => cond := not (exe_n and '1');
+            -- VS
+            when "0110" => cond := exe_v and '1';
+            -- VC
+            when "0111" => cond := not (exe_v and '1');
+            --HI
+            when "1000" => cond := (exe_c and '1') and not (exe_v and '1');
+            --LS
+            when "1001" => cond := (exe_z and '1') and not (exe_c and '1');
+            --GE
+            when "1010" => --?
+            --LT
+            when "1011" => --?
+            --GT  
+            when "1100" => --?
+            -- LE
+            when "1101" => --?
+            -- AL
+            when "1110" => cond := '1';
+                           report "cond bonne";
+            when others => cond := '0';
+          end case;
+
+          -- if pred true execute instruction
+          if cond = '1' then
+            if if2dec_empty = '1' then
+              dec_pop <= '1';
+            end if;
+          -- throw it away
+          else
+            
+          --end if cond = 1
+          end if;
+
+          
+
+          -- T4 to LINK
+          if instruction (27) = '1' and instruction (24) = '1' then
+            report "in T4 RUN";
+            next_state <= LINK;           
+            blink <= '1';
+          else
+            -- T5 to BRANCH
+            if instruction (27) = '1' and instruction (24) = '0' then
+            report "in T5 RUN";
+              next_state <= BRANCH;                       
+            --end if T5
+            end if;
+            
+          --end if t4          
+          end  if;
+
         --endif T1
         end if;
 
-
-        -- T2/T3 to RUN
-        -- regarder la condition d'execution
-        case instruction (31 downto 28) is 
-          --EQ
-          when "0000" => cond := exe_z and '1';
-          --NE
-          when "0001" => cond := not (exe_z and '0');
-          --CS
-          when "0010" => cond := exe_c and '1';
-          --CC
-          when "0011" => cond := not (exe_c and '1');
-          -- MI
-          when "0100" => cond := exe_n and '1';
-          -- PL
-          when "0101" => cond := not (exe_n and '1');
-          -- VS
-          when "0110" => cond := exe_v and '1';
-          -- VC
-          when "0111" => cond := not (exe_v and '1');
-          --HI
-          when "1000" => cond := (exe_c and '1') and not (exe_v and '1');
-          --LS
-          when "1001" => cond := (exe_z and '1') and not (exe_c and '1');
-          --GE
-          when "1010" => --?
-          --LT
-          when "1011" => --?
-          --GT  
-          when "1100" => --?
-          -- LE
-          when "1101" => --?
-          -- AL
-          when "1110" => cond := '1';
-          when others => cond := '0';
-        end case;
-
-        -- if pred true execute instruction
-        if cond = '1' then
-          if if2dec_empty = '1' then
-            dec_pop <= '1';
-          end if;
-        -- throw it away
-        else
-          
-        --end if cond = 1
-        end if;
-
-        next_state <= RUN;           
-
-        -- T4 to LINK
-        if instruction (27) = '1' and instruction (24) = '1' then
-          next_state <= LINK;           
-          blink <= '1';
-        else
-          -- T5 to BRANCH
-          if instruction (27) = '1' and instruction (24) = '0' then
-            next_state <= BRANCH;                       
-          --end if T5
-          end if;
-          
-        --end if t4          
-        end  if;
         
       when LINK =>        
+            report "in LINK";       
         -- T1 to BRANCH
         next_state <= BRANCH;
         
       when BRANCH =>
+        report "in BRANCH";
+        
         -- T1 to BRANCH
         if if2dec_empty = '1' then -- si on a pas l'intruction dans
           -- le fifo
@@ -622,7 +638,8 @@ begin
         
 
       when MTRANS =>
-
+        report "in MTRANS";
+        
 
 
     end case;
@@ -653,9 +670,13 @@ begin
   begin
 
     if (rising_edge(ck)) then
-      if (reset_n = '1') then
-        cur_state <= Run;
+        report " in rising edge  ";
 
+        if (reset_n = '1') then
+        cur_state <= FETCH;
+
+        report " in reset";
+        
         --init cond
         dec_pop <= '0';      -- put the instruction into fifo32
         -- to decode and execute it
@@ -663,16 +684,31 @@ begin
         blink <= '0';        -- make a link 
         mtrans_shift <= '0'; -- make a multiple transfert 
         dec2if_push  <= '0'; -- put nex address in fifo
-        inc_pc <= '0';       -- pc += 4
+        inc_pc <= '1';       -- pc += 4
 
         --reset fifo
         push32 <= '0';
         pop32  <= '1';
         
-      else
+        else
+          report " next state";
         cur_state <= next_state;
       --end reset
       end if;
+
+      -- ** gestion du write back en entré **
+
+      -- maj CSPR
+      -- done in reg instantiaton
+
+      --maj mem
+      -- done in reg instantiaton
+      
+      --maj wb
+      -- done in reg instantiaton        
+
+      -- ** fin gestion du wr en entré **
+
 
 
       -- traitement 
@@ -1029,28 +1065,33 @@ begin
               dec_exe_wb  <= '0';
               dec_flag_wb <= '1';
               dec_alu_xor <= '1';
-                             
+              report "in TEQ";
+              
             -- CMP
             when "1010" =>
               dec_exe_wb   <= '0';
               dec_flag_wb  <= '1';
               dec_alu_add  <= '1';
               dec_comp_op1 <= '1';
-                           
+              report "in CMP";
+              
             -- CMN
             when "1011" =>
               dec_exe_wb  <= '0';
               dec_flag_wb <= '1';
               dec_alu_and <= '1';
-
+              report "in CMN";
+              
             -- ORR
             when "1100" =>
               dec_alu_or   <= '1';              
+              report "in ORR";
               
             -- MOV
             when "1101" =>
               dec_op1 <= x"00_00_00_00";
               dec_alu_add <= '1';
+              report "in MOV";
               
             -- BIC
             when "1110" =>
