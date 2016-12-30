@@ -231,12 +231,12 @@ begin
 
     -- reset le banc de registre
 
-    radr1 <= "0000";
-    radr2 <= "0000";        
-    radr3 <= "0000";
+    radr1 <= "0001";
+    radr2 <= "0010";        
+    radr3 <= "0011";
+    radr4 <= "1111";
 
-    
-    reset_n <= '0';
+    reset_n <= '1';
     inc_pc <= '1';
     
     ck <= '0';
@@ -244,7 +244,7 @@ begin
     ck <= '1';
     wait for 1 ns;
     
-    reset_n <= '1';
+    reset_n <= '0';
 
     cspr_wb   <= '1';
     inval_czn <= '0';
@@ -258,6 +258,10 @@ begin
     -- invalider r1
     inval_adr1 <= "0001";
     inval1 <= '1';
+
+    -- invalider r1
+    inval_adr2 <= "0000";
+    inval2 <= '0';
 
     radr1 <= "0001";
     
@@ -288,13 +292,21 @@ begin
     wdata1 <= "11111111111111110000000000000000";
     wadr1 <= "0001";
     wen1 <= '1';
+    
+    -- ecrire dans r2
+    wdata2 <= "11111111111111110000000000000000";
+    wadr2 <= "0010";
+    wen2 <= '0';
+    
     ck <= '0';
     wait for 1 ns;
+    
     ck <= '1';
     wait for 1 ns;
     
     -- lire dans r1
-    radr1 <= "0001";
+--    radr1 <= "0001";
+    
     ck <= '0';
     wait for 1 ns;
     ck <= '1';
@@ -310,9 +322,11 @@ begin
     wait for 1 ns;
     
     --lire dans r1 la meme valeur que dans la premiere ecriture 
-    radr1 <= "0001";
+ --   radr1 <= "0001";
+
     ck <= '0';
     wait for 1 ns;
+
     ck <= '1';
     wait for 1 ns;
 

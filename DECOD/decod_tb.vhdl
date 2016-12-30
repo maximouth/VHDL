@@ -280,11 +280,16 @@ begin
       );
 
   process
-
+    variable step:natural;
+    variable time_step:natural;
+    
   begin
+    step := 0;
+    time_step := 10;
     ck <= '0';
-    wait for 1 ns;
-    report "1 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
     
     vss <= '1';
     vdd <= '0';
@@ -292,12 +297,14 @@ begin
     reset_n <= '1';
 
     ck <= '1';
-    wait for 1 ns;
-    report "2 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
 
     ck <= '0';
-    wait for 1 ns;
-    report "3 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
 
     -- wire up all the entries i decod
     mem_wb   <= '1';
@@ -325,28 +332,64 @@ begin
     if_pop <= '0';
     
     ck <= '1';
-    wait for 1 ns;
-    report "4 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
 
     ck <= '0';
-    wait for 1 ns;
-    report "5 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
     
     ck <= '1';
-    wait for 1 ns;
-    report "6 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
     
     ck <= '0';
-    wait for 1 ns;
-    report "7 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
     
     ck <= '1';
-    wait for 1 ns;
-    report "8 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
     
     ck <= '0';
-    wait for 1 ns;
-    report "9 ns";
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '1';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '0';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '1';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '0';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '1';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '0';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
     
     -- mv r5 2
 

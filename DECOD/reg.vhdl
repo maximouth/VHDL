@@ -106,15 +106,15 @@ begin
 
     if rising_edge(ck) then
       -- remetre l'etat du registre à 0
-      if reset_n = '0' then
+      if reset_n = '1' then
         r_valid <= X"FFFF";
         r_reg(15) <= X"00000000";
         r_reg(14) <= X"00000000";
         r_reg(1)  <= X"00000000";        
         r_cznv	<= '1';
         r_vv	<= '1';
-      end if;
-
+      else
+        
       -- incrementer pc 
       if inc_pc = '1' then
         cpt := cpt + 4;
@@ -172,8 +172,7 @@ begin
       end if;
     end if; -- rising edge
     
-    -- lecture port 1
-    
+    -- lecture port 1    
     adr_tmp := to_integer (unsigned (radr1));
     reg_rd1 <= r_reg (adr_tmp);
     reg_v1  <= r_valid (adr_tmp);
@@ -183,12 +182,12 @@ begin
     reg_rd2 <= r_reg (adr_tmp);
     reg_v2  <= r_valid (adr_tmp);
 
-    -- lecture port
+    -- lecture port 3
     adr_tmp := to_integer ( unsigned (radr3));
     reg_rd3 <= r_reg (adr_tmp);
     reg_v3  <= r_valid (adr_tmp);
 
-        -- lecture port
+    -- lecture port 4
     adr_tmp := to_integer ( unsigned (radr4));
     reg_rd4 <= r_reg (adr_tmp);
     reg_v4  <= r_valid (adr_tmp);
@@ -204,6 +203,7 @@ begin
     -- lecture pc
     reg_pc  <= r_reg (14);
     reg_pcv <= r_valid (14);
+  end if;
     
 
   end process;
