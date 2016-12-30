@@ -217,7 +217,7 @@ architecture Behavior OF Decod is
   signal mtrans_t : Std_Logic;
   signal branch_t : Std_Logic;
 
-  signal dec_pop  : Std_Logic;
+  signal dec_pop  : Std_Logic := '0';
   
 -- regop instructions
   signal and_i  : Std_Logic;
@@ -499,7 +499,7 @@ begin
 
   
   --state machine process.
-  process (cur_state, dec2if_full, condv, operv,
+  process (ck,cur_state, dec2if_full, condv, operv,
            dec2exe_full, if2dec_empty, reg_pcv, bl_i,
            branch_t, and_i, eor_i, sub_i, rsb_i, add_i,
            adc_i, sbc_i, rsc_i, orr_i, mov_i, bic_i,
@@ -509,6 +509,9 @@ begin
     variable cond    : Std_Logic;
 
   begin
+    if (falling_edge(ck)) then
+      report " in falling edge  ";
+
     case cur_state is
 
       when FETCH =>
@@ -645,6 +648,7 @@ begin
 
 
     end case;
+    end if;
   -- state machine
   end process;
 
