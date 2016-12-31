@@ -80,14 +80,6 @@ architecture Behavior OF Reg is
   type rf_array is array(15 downto 0) of std_logic_vector(31 downto 0);
   signal r_reg	: rf_array;
 
-  signal r_valid        : Std_Logic_Vector(15 downto 0);
-  signal r_c		: Std_Logic;
-  signal r_z		: Std_Logic;
-  signal r_n		: Std_Logic;
-  signal r_v		: Std_Logic;
-  signal r_cznv	        : Std_Logic;
-  signal r_vv		: Std_Logic;
-
 begin
 
   process (ck)
@@ -101,16 +93,23 @@ begin
     -- surement mettre le contenu de pc dans le compteur? 
     variable cpt : integer := 0;
     variable adr_tmp : integer := 0;
-    
+    variable r_valid : Std_Logic_Vector(15 downto 0) := X"FFFF";
+    variable r_valid_czn : Std_Logic := '1';
+    variable r_valid_ovr : Std_Logic := '1';
+ 
   begin
 
     report "-----**** CK ****------ : " & Std_Logic'image(ck);
     
-    report "carry : " & Std_Logic'image(wcry);
-    report "zero : " & Std_Logic'image(wzero);
-    report "neg : " & Std_Logic'image(wneg);
-    report "ovr : " & Std_Logic'image(wovr);
-    report "CSPR wb : " & Std_Logic'image(cspr_wb);
+    report "carry : " & Std_Logic'image(reg_cry);
+    report "zero : " & Std_Logic'image(reg_zero);
+    report "neg  : " & Std_Logic'image(reg_neg);
+    report "cznv : " & Std_Logic'image(reg_cznv);
+    report "ovr  : " & Std_Logic'image(reg_ovr);
+    report "vv   : " & Std_Logic'image(reg_vv);
+    report "PC   : " & integer'image(to_integer(unsigned(r_reg(15))));
+    report "PCv  : " & Std_Logic'image(reg_pcv);
+    
 
     report "radr1 : " & Std_Logic'image(radr1(3)) & Std_Logic'image(radr1(2)) & Std_Logic'image(radr1(1)) & Std_Logic'image(radr1(0)) ;
     report "radr2 : " & Std_Logic'image(radr2(3)) & Std_Logic'image(radr2(2)) & Std_Logic'image(radr2(1)) & Std_Logic'image(radr2(0)) ;
@@ -127,7 +126,10 @@ begin
     if rising_edge(ck) then
       -- remetre l'etat du registre à 0
       if reset_n = '1' then
-        r_valid <= X"FFFF";
+        report "RESET";
+        r_valid := X"FFFF";
+        r_valid_czn := '1';
+        r_valid_ovr := '1';
         r_reg(15) <= X"00000000";
         r_reg(14) <= X"00000000";
         r_reg(1)  <= X"00000000";
@@ -143,45 +145,63 @@ begin
         r_reg(11)  <= X"00000000";
         r_reg(12)  <= X"00000000";
         r_reg(13)  <= X"00000000";
-        r_cznv	<= '1';
-        r_vv	<= '1';
+        reg_cry	 <= '0';
+        reg_zero <= '0';
+        reg_neg	 <= '0';
+        reg_ovr	 <= '0';
+        reg_cznv <= '1';
+        reg_vv	 <= '1';
       else
         
-        -- incrementer pc 
-        if inc_pc = '1' then
-          report "dans inc_pc";
-          cpt := cpt + 4;
-          r_reg (15) <= Std_Logic_Vector (to_signed ( cpt , 32));
-        end if;       
-
         -- changer la validité du port 1
         if inval1 = '1' then
-          
           adr_tmp := to_integer ( unsigned (inval_adr1));
-          r_valid(adr_tmp) <= '0';
+          r_valid(adr_tmp) := '0';
         end if;
 
         -- changer la validité du port 2
         if inval2 = '1' then
           adr_tmp := to_integer ( unsigned (inval_adr2));
-          r_valid(adr_tmp) <= '0';
+          r_valid(adr_tmp) := '0';
         end if;
+
+        -- changer la validité des flags c,z,n
+        if inval_czn = '1' then
+          r_valid_czn := '0';
+        end if;
+        
+        -- changer la validité du flag ovr
+        if inval_ovr = '1' then
+          r_valid_ovr := '0';
+        end if;
+        
+        -- incrementer pc 
+        if inc_pc = '1' then
+          report "dans inc_pc";
+          adr_tmp := 15;
+          if r_valid (adr_tmp) = '0' then
+            r_valid (adr_tmp) := '1';
+            cpt := to_integer(unsigned(r_reg(15)));
+            cpt := cpt + 4;
+            r_reg (15) <= Std_Logic_Vector ( to_unsigned (cpt, 32));
+          end if;
+        end if;       
 
         -- ecriture port 1
         if (wen1 = '1') then
           adr_tmp := to_integer ( unsigned (wadr1));
           if r_valid (adr_tmp) = '0' then
-            r_valid (adr_tmp) <= '1';
+            r_valid (adr_tmp) := '1';
             r_reg (adr_tmp) <= wdata1;
           end if;
           
         end if;
         
         -- ecriture port 2
-        if (wen2 = '1') then
+        if (wen2 = '1') and not((wen1 = '1') and (wadr1 = wadr2)) then
           adr_tmp := to_integer ( unsigned (wadr2));
           if r_valid (adr_tmp) = '0' then
-            r_valid (adr_tmp) <= '1';
+            r_valid (adr_tmp) := '1';
             r_reg (adr_tmp) <= wdata2;
           end if;
           
@@ -192,15 +212,17 @@ begin
         if cspr_wb = '1' then
 
           -- cas flag CNZ
-          if inval_czn = '1' then
-            r_c <= wcry;
-            r_z <= wzero;
-            r_n <= wneg;
+          if r_valid_czn = '0' then
+            r_valid_czn := '1';
+            reg_cry <= wcry;
+            reg_zero <= wzero;
+            reg_neg <= wneg;
           end if;
           
           -- cas flag V
-          if inval_ovr = '1' then
-            r_v <= wovr;
+          if r_valid_ovr = '0' then
+            r_valid_ovr := '1';
+            reg_ovr <= wovr;
           end if;
           
         end if;
@@ -226,17 +248,9 @@ begin
       reg_rd4 <= r_reg (adr_tmp);
       reg_v4  <= r_valid (adr_tmp);
 
-      --lecture cspr
-      reg_cry  <= r_c;
-      reg_zero <= r_z;
-      reg_neg  <= r_n;
-      reg_cznv <= r_cznv;
-      reg_ovr  <= r_v;
-      reg_vv <= r_vv;
-
       -- lecture pc
-      reg_pc  <= r_reg (14);
-      reg_pcv <= r_valid (14);
+      reg_pc  <= r_reg (15);
+      reg_pcv <= r_valid (15);
     end if;
     
 

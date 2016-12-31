@@ -225,27 +225,30 @@ begin
   process
 
   begin
-
-
-
-
     -- reset le banc de registre
 
+    ck <= '0';
+    wait for 1 ns;
+     
     radr1 <= "0001";
     radr2 <= "0010";        
     radr3 <= "0011";
     radr4 <= "1111";
 
     reset_n <= '1';
-    inc_pc <= '1';
     
-    ck <= '0';
-    wait for 1 ns;
     ck <= '1';
+    wait for 1 ns;
+    ck <= '0';
     wait for 1 ns;
     
     reset_n <= '0';
 
+    ck <= '1';
+    wait for 1 ns;
+    ck <= '0';
+    wait for 1 ns;
+   
     cspr_wb   <= '1';
     inval_czn <= '0';
     inval_ovr <= '0';
@@ -259,25 +262,26 @@ begin
     inval_adr1 <= "0001";
     inval1 <= '1';
 
-    -- invalider r1
-    inval_adr2 <= "0000";
-    inval2 <= '0';
+    -- valider r1
+    inval_adr2 <= "1111";
+    inval2 <= '1';
 
     radr1 <= "0001";
-    
-    ck <= '0';
-    wait for 1 ns;
+        
     ck <= '1';
+    wait for 1 ns;        
+    ck <= '0';
     wait for 1 ns;        
 
     inval_czn <= '1';
     inval_ovr <= '1';
     
     inval1 <= '0';
+    inc_pc <= '1';
 
-    ck <= '0';
-    wait for 1 ns;
     ck <= '1';
+    wait for 1 ns;
+    ck <= '0';
     wait for 1 ns;
 
     cspr_wb   <= '0';
@@ -285,8 +289,6 @@ begin
     wzero <= '0';
     wneg  <= '0';
     wovr  <= '0';
-
-
     
     -- ecrire dans r1
     wdata1 <= "11111111111111110000000000000000";
@@ -298,36 +300,39 @@ begin
     wadr2 <= "0010";
     wen2 <= '0';
     
-    ck <= '0';
-    wait for 1 ns;
-    
+     -- valider r1
+    inval_adr2 <= "1111";
+    inval2 <= '0';
+   
     ck <= '1';
+    wait for 1 ns;
+    ck <= '0';
     wait for 1 ns;
     
     -- lire dans r1
---    radr1 <= "0001";
+    radr1 <= "0001";
     
-    ck <= '0';
-    wait for 1 ns;
     ck <= '1';
+    wait for 1 ns;
+    ck <= '0';
     wait for 1 ns;
     
     -- ecrire dans r1
     wdata1 <= "00000000000000001111111111111111";
     wadr1 <= "0001";
     wen1 <= '1';
-    ck <= '0';
-    wait for 1 ns;
     ck <= '1';
+    wait for 1 ns;
+    ck <= '0';
     wait for 1 ns;
     
     --lire dans r1 la meme valeur que dans la premiere ecriture 
- --   radr1 <= "0001";
-
-    ck <= '0';
-    wait for 1 ns;
+    radr1 <= "0001";
 
     ck <= '1';
+    wait for 1 ns;
+
+    ck <= '0';
     wait for 1 ns;
 
     
