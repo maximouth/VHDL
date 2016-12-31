@@ -684,7 +684,7 @@ begin
     if (rising_edge(ck)) then
       report " in rising edge  ";
       
-      if (reset_n = '1') then
+      if (reset_n = '0') then
         cur_state <= FETCH;
 
         report " in reset";

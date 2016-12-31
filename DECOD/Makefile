@@ -1,5 +1,5 @@
 GHDL=ghdl
-all : reg_tb decod
+all : decod_tb
 
 # compil fifo
 fifo_generic.o : fifo_generic.vhdl
@@ -43,11 +43,9 @@ decod.o :  decod.vhdl
 decod_tb.o : decod_tb.vhdl fifo_generic.o reg.o decod.o
 	${GHDL} -a -v decod_tb.vhdl 
 
-decod : decod_tb.o
+decod_tb : decod_tb.o
 	${GHDL} -e -v decod_tb
 	${GHDL} -r decod_tb --vcd=decod.vcd
-
-
 
 clean :
 	rm -f *.o *#  *vcd *~

@@ -235,14 +235,14 @@ begin
     radr3 <= "0011";
     radr4 <= "1111";
 
-    reset_n <= '1';
+    reset_n <= '0';
     
     ck <= '1';
     wait for 1 ns;
     ck <= '0';
     wait for 1 ns;
     
-    reset_n <= '0';
+    reset_n <= '1';
 
     ck <= '1';
     wait for 1 ns;

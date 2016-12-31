@@ -68,7 +68,7 @@ entity Reg is
     
     -- global interface
     ck			: in Std_Logic;
-    -- 1 faire reset 0 ne pas le faire
+    -- 0 reset, 1 process the instruction
     reset_n		: in Std_Logic;
     vdd			: in bit;
     vss			: in bit);
@@ -125,7 +125,7 @@ begin
     
     if rising_edge(ck) then
       -- remetre l'etat du registre à 0
-      if reset_n = '1' then
+      if reset_n = '0' then
         report "RESET";
         r_valid := X"FFFF";
         r_valid_czn := '1';

@@ -294,7 +294,7 @@ begin
     vss <= '1';
     vdd <= '0';
 
-    reset_n <= '1';
+    reset_n <= '0';
 
     ck <= '1';
     wait for 10 ns;
@@ -322,7 +322,7 @@ begin
     exe_res  <= x"00000000";
     
     
-    reset_n  <= '0';
+    reset_n  <= '1';
     
     -- mv r2 1
     if_ir <= "11100011101100000010000000000001"; 

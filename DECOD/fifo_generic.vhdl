@@ -42,7 +42,7 @@ begin
     if rising_edge(ck) then
 
       -- Valid bit
-      if reset_n = '1' then
+      if reset_n = '0' then
         fifo_v <= '0';
       else
         if fifo_v = '0' then
