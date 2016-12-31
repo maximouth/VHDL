@@ -208,7 +208,7 @@ architecture Behavior OF Decod is
   
 --  signal cond	: Std_Logic;
   signal condv	: Std_Logic;
-  signal operv	: Std_Logic;
+  signal operv	: Std_Logic := '1';
 
   signal regop_t  : Std_Logic;
   signal mult_t   : Std_Logic;
@@ -253,7 +253,7 @@ architecture Behavior OF Decod is
 
 -- branch instruction
   signal b_i    : Std_Logic;
-  signal bl_i   : Std_Logic;
+  signal bl_i   : Std_Logic := '0';
 
 -- link
   signal blink  : Std_Logic;
@@ -306,7 +306,7 @@ architecture Behavior OF Decod is
 -- PC
   signal reg_pc  : Std_Logic_Vector(31 downto 0);
   signal reg_pcv : Std_Logic;
-  signal inc_pc  : Std_Logic;
+  signal inc_pc  : Std_Logic := '0';
 
 -- FIFOs
   signal dec2if_full : Std_Logic;
@@ -368,7 +368,7 @@ architecture Behavior OF Decod is
   signal din32         : Std_logic_vector (31 downto 0);
   signal dout32        : Std_logic_vector (31 downto 0);
   signal push32        : Std_Logic := '0';
-  signal pop32         : Std_Logic := '1';
+  signal pop32         : Std_Logic := '0';
   signal full32        : Std_Logic;
   signal empty32       : Std_Logic;
 
@@ -499,7 +499,7 @@ begin
 
   
   --state machine process.
-  process (ck,cur_state, dec2if_full, condv, operv,
+  process (cur_state, dec2if_full, condv, operv,
            dec2exe_full, if2dec_empty, reg_pcv, bl_i,
            branch_t, and_i, eor_i, sub_i, rsb_i, add_i,
            adc_i, sbc_i, rsc_i, orr_i, mov_i, bic_i,
@@ -509,13 +509,10 @@ begin
     variable cond    : Std_Logic;
 
   begin
-    if (falling_edge(ck)) then
-      report " in falling edge  ";
 
     case cur_state is
-
+      
       when FETCH =>
-        
         -- T1 to FETCH
         if dec2if_full = '1' then
           next_state <= FETCH;
@@ -549,81 +546,87 @@ begin
           end if;
           
         else
-          report "in T2/T3 run";       
+
           -- T2/T3 to RUN
           -- regarder la condition d'execution
-          case if_ir (31 downto 28) is 
-            --EQ
-            when "0000" => cond := exe_z;
-            --NE
-            when "0001" => cond := not (exe_z);
-            --CS
-            when "0010" => cond := exe_c;
-            --CC
-            when "0011" => cond := not (exe_c);
-            -- MI
-            when "0100" => cond := exe_n;
-            -- PL
-            when "0101" => cond := not (exe_n);
-            -- VS
-            when "0110" => cond := exe_v;
-            -- VC
-            when "0111" => cond := not (exe_v);
-            --HI
-            when "1000" => cond := exe_c and not (exe_v);
-            --LS
-            when "1001" => cond := exe_z and not (exe_c);
-            --GE
-            when "1010" => cond := not (exe_n xor exe_v);
-            --LT
-            when "1011" => cond := exe_n xor exe_v;
-            --GT  
-            when "1100" => cond := not(exe_z) and not (exe_n xor exe_v); 
-            -- LE
-            when "1101" => cond := exe_z or (exe_n xor exe_v);
-            -- AL
-            when "1110" => cond := '1';
-                           report "cond bonne";
-            when others => cond := '0';
-          end case;
 
-          -- if pred true execute instruction
-          if cond = '1' then
-            if if2dec_empty = '1' then
-              report "dec_pop <= 1";
-              dec_pop <= '1';
-              report "dec_pop: " & std_logic'image(dec_pop);
-           end if;
-          -- throw it away
-          else
+          if operv = '1' then
+          report "in T2/T3 run";       
+            if dec_pop = '0' then
             
-          --end if cond = 1
-          end if;
+            case if_ir (31 downto 28) is 
+              --EQ
+              when "0000" => cond := exe_z;
+              --NE
+              when "0001" => cond := not (exe_z);
+              --CS
+              when "0010" => cond := exe_c;
+              --CC
+              when "0011" => cond := not (exe_c);
+              -- MI
+              when "0100" => cond := exe_n;
+              -- PL
+              when "0101" => cond := not (exe_n);
+              -- VS
+              when "0110" => cond := exe_v;
+              -- VC
+              when "0111" => cond := not (exe_v);
+              --HI
+              when "1000" => cond := exe_c and not (exe_v);
+              --LS
+              when "1001" => cond := exe_z and not (exe_c);
+              --GE
+              when "1010" => cond := not (exe_n xor exe_v);
+              --LT
+              when "1011" => cond := exe_n xor exe_v;
+              --GT  
+              when "1100" => cond := not(exe_z) and not (exe_n xor exe_v);
+              -- LE
+              when "1101" => cond := exe_z or (exe_n xor exe_v);
+              -- AL
+              when "1110" => cond := '1';
+                             report "cond bonne";
+              when others => cond := '0';
+            end case;
 
-          
-
-          -- T4 to LINK
-          if if_ir (27) = '1' and if_ir (24) = '1' then
-            report "in T4 RUN";
-            next_state <= LINK;           
-            blink <= '1';
-          else
-            -- T5 to BRANCH
-            if if_ir (27) = '1' and if_ir (24) = '0' then
-            report "in T5 RUN";
-              next_state <= BRANCH;                       
-            --end if T5
+            -- if pred true execute instruction
+            if cond = '1' then
+              if if2dec_empty = '1' then
+                dec_pop <= '1';
+                operv <= '0';
+                report "dec_pop T2/3: " & std_logic'image(dec_pop);
+              end if;
+            -- throw it away
+            else
+              
+            --end if cond = 1
             end if;
+          end if;
+          
             
-          --end if t4          
-          end  if;
+            -- T4 to LINK
+            if if_ir (27) = '1' and if_ir (24) = '1' then
+              report "in T4 RUN";
+              next_state <= LINK;           
+              blink <= '1';
+            else
+              -- T5 to BRANCH
+              if if_ir (27) = '1' and if_ir (24) = '0' then
+                report "in T5 RUN";
+                next_state <= BRANCH;                       
+              --end if T5
+              end if;
+            --end if t4          
+            end if;
 
+          end if;
         --endif T1
         end if;
 
         
+        
       when LINK =>        
-            report "in LINK";       
+        report "in LINK";       
         -- T1 to BRANCH
         next_state <= BRANCH;
         
@@ -644,17 +647,16 @@ begin
 
       when MTRANS =>
         report "in MTRANS";
-        
-
 
     end case;
-    end if;
   -- state machine
   end process;
 
   -- decod process
 
-  process (ck)
+
+  
+  process 
 
     variable tmp     : Std_logic_vector (31 downto 0);
     
@@ -675,45 +677,56 @@ begin
 
   begin
 
+    wait until ck = '1';
+
+    bl_i <= not bl_i;
+    
     if (rising_edge(ck)) then
-        report " in rising edge  ";
+      report " in rising edge  ";
+      
+      if (reset_n = '1') then
+        cur_state <= FETCH;
 
-        if (reset_n = '1') then
-          cur_state <= FETCH;
-
-          report " in reset";
+        report " in reset";
         
-          --init cond
-          dec_pop <= '0';      -- put the instruction into fifo32
-          -- to decode and execute it
-          dec2exe_push <= '0'; -- put something into the fifo to EXE
-          blink <= '0';        -- make a link 
-          mtrans_shift <= '0'; -- make a multiple transfert 
-          dec2if_push  <= '0'; -- put nex address in fifo
-          inc_pc <= '0';       -- pc += 4
+        --init cond
+--        dec_pop <= '0';      -- put the instruction into fifo32
+        -- to decode and execute it
+        dec2exe_push <= '0'; -- put something into the fifo to EXE
+        blink <= '0';        -- make a link 
+        mtrans_shift <= '0'; -- make a multiple transfert 
+        dec2if_push  <= '0'; -- put nex address in fifo
+--        inc_pc <= '0';       -- pc += 4
 
-          --reset fifo
-          push32 <= '0';
-          pop32  <= '1';
+        --reset fifo
+        push32 <= '0';
+        pop32  <= '0';
+        --reset reg
+        radr1 <= "1001";
+        radr2 <= "1010";
+        radr3 <= "0011";
+        radr4 <= "1111";
+      else
+        report " next state: ";
+        cur_state <= next_state;
 
-          --reset reg
-          radr1 <= "0001";
-          radr2 <= "0010";
-          radr3 <= "0011";
-          radr4 <= "1111";
-        else
-          report " next state: ";
-          cur_state <= next_state;
       --end reset
       end if;
 
-
-     
+      
       -- ** gestion du write back en entrée **
 
       -- maj CSPR
       -- done in reg instantiaton
-
+      if exe_flag_wb = '1' then
+        inval_ovr <= '1';
+        inval_czn <= '1';
+      else
+        inval_ovr <= '0';
+        inval_czn <= '0';
+      end if;
+      
+      
       --maj mem
       -- done in reg instantiaton
       
@@ -734,7 +747,7 @@ begin
       -- send instruction address to dec2if
       if dec2if_push = '1' then
         report "Step 1" ;
-        inc_pc <= '0';
+--        inc_pc <= '0';
 
         if reg_pcv = '1' then
           report "reg_pcv = 1";
@@ -744,13 +757,19 @@ begin
       
       -- step 2
       -- read instruction in instruction and store it into if2dec
-      if dec_pop = '1' then
+      report "full32 : " & Std_Logic'image(full32);
+      report "empty32 : " & Std_Logic'image(empty32);
+
+      
+      if dec_pop = '1'then
         report "Step 2" ;
         if full32 = '0' then
+          report "remplisage fifo" ;
           din32   <= if_ir;
           push32  <= '1';
-          pop32   <= '1';
-          dec_pop <= '0';
+          pop32   <= '0';
+          --dec_pop <= '0';
+
         end if;
       end if;
       
@@ -758,11 +777,14 @@ begin
       -- decode the instruction
 
       --if there is an instruction :
-      if full32 = '1' then 
+      if full32 = '1' then
+        report "step 3";
         -- if instruction is a branch or a branch and link
         if dout32 (27) = '1' then 
+          report "branch instruction";
           -- if a link save return add in r14 (pc +4)
           if blink = '1' then
+          report "branch and link instruction";
             -- put the right thing to EXE to wb in r14
 
             dec_op1       <= reg_pc;
@@ -827,24 +849,26 @@ begin
 
           --acces memoire
           if dout32 (27) = '0' and dout32 (26) = '1'  then
-          
-          ------- ********************************************** -----
-          ------- ********************************************** -----
-          --           rajouter acces memoire
-          --           dout32 (27) = 0
-          --           dout32 (26) = 1
-          --
-          --           rajouter :
-          --                -> pré post indexation dout32 (24)
-          --                -> UP down dout32 (23) 
-          --
-          --
-          ------- ********************************************** -----
-          ------- ********************************************** -----
+          report "mem instruction";            
+            ------- ********************************************** -----
+            ------- ********************************************** -----
+            --           rajouter acces memoire
+            --           dout32 (27) = 0
+            --           dout32 (26) = 1
+            --
+            --           rajouter :
+            --                -> pré post indexation dout32 (24)
+            --                -> UP down dout32 (23) 
+            --
+            --
+            ------- ********************************************** -----
+            ------- ********************************************** -----
 
             
             if dout32 (20) = '1' then
               -- load
+              report "load inst";
+              
               dec_mem_sb <= '0';
               dec_mem_sw <= '0';
 
@@ -853,6 +877,7 @@ begin
               
             else
               -- store
+              report "store inst";
               dec_mem_lb <= '0';
               dec_mem_lw <= '0';
 
@@ -907,14 +932,19 @@ begin
           end if;
           
         else
+          report "normal inst";
+          
           --decode the instruction
           -- get values
           opcode := dout32 (24 downto 21);
           rn_lu  := dout32 (19 downto 16);
           rd_lu  := dout32 (15 downto 12);
 
+          report "opcode ";
+          
           -- decode operand 2
           if dout32 (25) = '1' then
+          report "op2 immediat";
             --> immediat
             -- dout32 (7  downto 0) into op2 alu
             -- dout32 (11 downto 8) into shift dec
@@ -927,9 +957,9 @@ begin
           else
             --> registre
 
-               --get the value in rm
-              radr2  <= dout32 (3 downto 0);
-              rm_reg := rdata2;
+            --get the value in rm
+            radr2  <= dout32 (3 downto 0);
+            rm_reg := rdata2;
 
             
             if dout32 (4) = '1' then
@@ -941,7 +971,7 @@ begin
               ----------- les 5 premiers bits dans val_dec     ------
               ----------- ************************************ ------
               ----------- ************************************ ------
-           
+              
               --get the value in rs for shift value
               radr3  <= dout32 (11 downto 8);
               rs_reg := rdata3;
@@ -1167,7 +1197,9 @@ begin
 
     --end rising edge
     end if;
-  -- process clock
+
+
+-- process clock
   end process;
   
 end Behavior;

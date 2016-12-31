@@ -68,7 +68,7 @@ entity Reg is
     
     -- global interface
     ck			: in Std_Logic;
-    -- 0 faire reset 1 ne pas le faire
+    -- 1 faire reset 0 ne pas le faire
     reset_n		: in Std_Logic;
     vdd			: in bit;
     vss			: in bit);
@@ -104,106 +104,140 @@ begin
     
   begin
 
+    report "-----**** CK ****------ : " & Std_Logic'image(ck);
+    
+    report "carry : " & Std_Logic'image(wcry);
+    report "zero : " & Std_Logic'image(wzero);
+    report "neg : " & Std_Logic'image(wneg);
+    report "ovr : " & Std_Logic'image(wovr);
+    report "CSPR wb : " & Std_Logic'image(cspr_wb);
+
+    report "radr1 : " & Std_Logic'image(radr1(3)) & Std_Logic'image(radr1(2)) & Std_Logic'image(radr1(1)) & Std_Logic'image(radr1(0)) ;
+    report "radr2 : " & Std_Logic'image(radr2(3)) & Std_Logic'image(radr2(2)) & Std_Logic'image(radr2(1)) & Std_Logic'image(radr2(0)) ;
+    report "radr3 : " & Std_Logic'image(radr3(3)) & Std_Logic'image(radr3(2)) & Std_Logic'image(radr3(1)) & Std_Logic'image(radr3(0)) ;
+    report "radr4 : " & Std_Logic'image(radr4(3)) & Std_Logic'image(radr4(2)) & Std_Logic'image(radr4(1)) & Std_Logic'image(radr4(0)) ;
+    
+
+    report "inval_ovr : " & Std_Logic'image(inval_ovr);
+    report "inval_czn : " & Std_Logic'image(inval_czn);
+
+    report "inc pc : " & Std_Logic'image(inc_pc);
+    
+    
     if rising_edge(ck) then
       -- remetre l'etat du registre à 0
       if reset_n = '1' then
         r_valid <= X"FFFF";
         r_reg(15) <= X"00000000";
         r_reg(14) <= X"00000000";
-        r_reg(1)  <= X"00000000";        
+        r_reg(1)  <= X"00000000";
+        r_reg(2)  <= X"00000000";
+        r_reg(3)  <= X"00000000";
+        r_reg(4)  <= X"00000000";
+        r_reg(5)  <= X"00000000";
+        r_reg(6)  <= X"00000000";
+        r_reg(7)  <= X"00000000";
+        r_reg(8)  <= X"00000000";
+        r_reg(9)  <= X"00000000";
+        r_reg(10)  <= X"00000000";
+        r_reg(11)  <= X"00000000";
+        r_reg(12)  <= X"00000000";
+        r_reg(13)  <= X"00000000";
         r_cznv	<= '1';
         r_vv	<= '1';
       else
         
-      -- incrementer pc 
-      if inc_pc = '1' then
-        cpt := cpt + 4;
-        r_reg (15) <= Std_Logic_Vector (to_signed ( cpt , 32));
-      end if;       
+        -- incrementer pc 
+        if inc_pc = '1' then
+          report "dans inc_pc";
+          cpt := cpt + 4;
+          r_reg (15) <= Std_Logic_Vector (to_signed ( cpt , 32));
+        end if;       
 
-      -- changer la validité du port 1
-      if inval1 = '1' then
-        adr_tmp := to_integer ( unsigned (inval_adr1));
-        r_valid(adr_tmp) <= '0';
-      end if;
+        -- changer la validité du port 1
+        if inval1 = '1' then
+          
+          adr_tmp := to_integer ( unsigned (inval_adr1));
+          r_valid(adr_tmp) <= '0';
+        end if;
 
-      -- changer la validité du port 2
-      if inval2 = '1' then
-        adr_tmp := to_integer ( unsigned (inval_adr2));
-        r_valid(adr_tmp) <= '0';
-      end if;
+        -- changer la validité du port 2
+        if inval2 = '1' then
+          adr_tmp := to_integer ( unsigned (inval_adr2));
+          r_valid(adr_tmp) <= '0';
+        end if;
 
-      -- ecriture port 1
-      if (wen1 = '1') then
-        adr_tmp := to_integer ( unsigned (wadr1));
-        if r_valid (adr_tmp) = '0' then
-          r_valid (adr_tmp) <= '1';
-          r_reg (adr_tmp) <= wdata1;
+        -- ecriture port 1
+        if (wen1 = '1') then
+          adr_tmp := to_integer ( unsigned (wadr1));
+          if r_valid (adr_tmp) = '0' then
+            r_valid (adr_tmp) <= '1';
+            r_reg (adr_tmp) <= wdata1;
+          end if;
+          
         end if;
         
-      end if;
+        -- ecriture port 2
+        if (wen2 = '1') then
+          adr_tmp := to_integer ( unsigned (wadr2));
+          if r_valid (adr_tmp) = '0' then
+            r_valid (adr_tmp) <= '1';
+            r_reg (adr_tmp) <= wdata2;
+          end if;
+          
+        end if;
+
+
+        -- ecriture flags
+        if cspr_wb = '1' then
+
+          -- cas flag CNZ
+          if inval_czn = '1' then
+            r_c <= wcry;
+            r_z <= wzero;
+            r_n <= wneg;
+          end if;
+          
+          -- cas flag V
+          if inval_ovr = '1' then
+            r_v <= wovr;
+          end if;
+          
+        end if;
+      end if; -- rising edge
       
-      -- ecriture port 2
-      if (wen2 = '1') then
-        adr_tmp := to_integer ( unsigned (wadr2));
-        if r_valid (adr_tmp) = '0' then
-          r_valid (adr_tmp) <= '1';
-          r_reg (adr_tmp) <= wdata2;
-        end if;
-        
-      end if;
+      -- lecture port 1    
+      adr_tmp := to_integer (unsigned (radr1));
+      reg_rd1 <= r_reg (adr_tmp);
+      reg_v1  <= r_valid (adr_tmp);
+      
+      -- lecture port 2
+      adr_tmp := to_integer ( unsigned (radr2));
+      reg_rd2 <= r_reg (adr_tmp);
+      reg_v2  <= r_valid (adr_tmp);
 
+      -- lecture port 3
+      adr_tmp := to_integer ( unsigned (radr3));
+      reg_rd3 <= r_reg (adr_tmp);
+      reg_v3  <= r_valid (adr_tmp);
 
-      -- ecriture flags
-      if cspr_wb = '1' then
+      -- lecture port 4
+      adr_tmp := to_integer ( unsigned (radr4));
+      reg_rd4 <= r_reg (adr_tmp);
+      reg_v4  <= r_valid (adr_tmp);
 
-        -- cas flag CNZ
-        if inval_czn = '1' then
-          r_c <= wcry;
-          r_z <= wzero;
-          r_n <= wneg;
-        end if;
-        
-        -- cas flag V
-        if inval_ovr = '1' then
-          r_v <= wovr;
-        end if;
-        
-      end if;
-    end if; -- rising edge
-    
-    -- lecture port 1    
-    adr_tmp := to_integer (unsigned (radr1));
-    reg_rd1 <= r_reg (adr_tmp);
-    reg_v1  <= r_valid (adr_tmp);
-    
-    -- lecture port 2
-    adr_tmp := to_integer ( unsigned (radr2));
-    reg_rd2 <= r_reg (adr_tmp);
-    reg_v2  <= r_valid (adr_tmp);
+      --lecture cspr
+      reg_cry  <= r_c;
+      reg_zero <= r_z;
+      reg_neg  <= r_n;
+      reg_cznv <= r_cznv;
+      reg_ovr  <= r_v;
+      reg_vv <= r_vv;
 
-    -- lecture port 3
-    adr_tmp := to_integer ( unsigned (radr3));
-    reg_rd3 <= r_reg (adr_tmp);
-    reg_v3  <= r_valid (adr_tmp);
-
-    -- lecture port 4
-    adr_tmp := to_integer ( unsigned (radr4));
-    reg_rd4 <= r_reg (adr_tmp);
-    reg_v4  <= r_valid (adr_tmp);
-
-    --lecture cspr
-    reg_cry  <= r_c;
-    reg_zero <= r_z;
-    reg_neg  <= r_n;
-    reg_cznv <= r_cznv;
-    reg_ovr  <= r_v;
-    reg_vv <= r_vv;
-
-    -- lecture pc
-    reg_pc  <= r_reg (14);
-    reg_pcv <= r_valid (14);
-  end if;
+      -- lecture pc
+      reg_pc  <= r_reg (14);
+      reg_pcv <= r_valid (14);
+    end if;
     
 
   end process;

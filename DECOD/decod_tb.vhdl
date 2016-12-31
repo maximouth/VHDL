@@ -311,11 +311,11 @@ begin
     mem_res  <= x"00000001";
     mem_dest <= "0000";
 
-    exe_flag_wb <= '0';
-    exe_c <= '0';
-    exe_v <= '0';
-    exe_n <= '0';
-    exe_z <= '0';
+    exe_flag_wb <= '1';
+    exe_c <= '1';
+    exe_v <= '1';
+    exe_n <= '1';
+    exe_z <= '1';
     
     exe_wb   <= '0';
     exe_dest <= "0000";
@@ -336,15 +336,7 @@ begin
     step := step + 1;
     report "-----------" & natural'image(step*time_step) & " ns";
 
-    ck <= '0';
-    wait for 10 ns;
-    step := step + 1;
-    report "-----------" & natural'image(step*time_step) & " ns";
-    
-    ck <= '1';
-    wait for 10 ns;
-    step := step + 1;
-    report "-----------" & natural'image(step*time_step) & " ns";
+    --if_ir <= "11110011101100000010000000000001"; 
     
     ck <= '0';
     wait for 10 ns;
@@ -391,6 +383,56 @@ begin
     step := step + 1;
     report "-----------" & natural'image(step*time_step) & " ns";
     
+    ck <= '1';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '0';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+
+        ck <= '1';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '0';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+
+        ck <= '1';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '0';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+
+        ck <= '1';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '0';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+
+        ck <= '1';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+    
+    ck <= '0';
+    wait for 10 ns;
+    step := step + 1;
+    report "-----------" & natural'image(step*time_step) & " ns";
+
     -- mv r5 2
 
     -- add r3 r3 r5
