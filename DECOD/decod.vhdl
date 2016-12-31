@@ -652,10 +652,7 @@ begin
   -- state machine
   end process;
 
-  -- decod process
-
-
-  
+  -- decod process 
   process 
 
     variable tmp     : Std_logic_vector (31 downto 0);
@@ -679,10 +676,8 @@ begin
 
     wait until ck = '1';
 
-    bl_i <= not bl_i;
-    
     if (rising_edge(ck)) then
-      report " in rising edge  ";
+      report "-------------- in rising edge  ";
       
       if (reset_n = '0') then
         cur_state <= FETCH;
