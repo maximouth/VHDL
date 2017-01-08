@@ -40,11 +40,6 @@ architecture Structurel of reg_tb is
       reg_rd3		: out Std_Logic_Vector(31 downto 0);
       radr3		: in Std_Logic_Vector(3 downto 0);
       reg_v3		: out Std_Logic;
-
-      -- Read Port 4 32 bits
-      reg_rd4		: out Std_Logic_Vector(31 downto 0);
-      radr4		: in Std_Logic_Vector(3 downto 0);
-      reg_v4		: out Std_Logic;
       
       -- read CSPR Port
       reg_cry		: out Std_Logic;
@@ -112,11 +107,6 @@ architecture Structurel of reg_tb is
   signal radr3		:  std_logic_vector(3 downto 0);
   signal reg_v3		:  Std_Logic;
 
-  -- SIGNAL Read Posignal rt 4 32 bits
-  signal reg_rd4	:  std_logic_vector(31 downto 0);
-  signal radr4		:  std_logic_vector(3 downto 0);
-  signal reg_v4		:  Std_Logic;
-
   
   -- signal read CSPR Port
   signal reg_cry		:  Std_Logic;
@@ -183,11 +173,6 @@ begin
       reg_rd3 =>reg_rd3,
       radr3   =>radr3,
       reg_v3  => reg_v3,
-
-      -- Read Port 4 32 bits
-      reg_rd4 =>reg_rd4,
-      radr4   =>radr4,
-      reg_v4  => reg_v4,
       
       -- read CSPR Port
       reg_cry  => reg_cry,
@@ -228,26 +213,30 @@ begin
     -- reset le banc de registre
 
     ck <= '0';
-    wait for 1 ns;
+    wait for 100 fs;
      
     radr1 <= "0001";
     radr2 <= "0010";        
     radr3 <= "0011";
-    radr4 <= "1111";
 
     reset_n <= '0';
     
-    ck <= '1';
-    wait for 1 ns;
+    ck <= '1'; ------------------------------------- 0
+    wait for 100 fs;
     ck <= '0';
-    wait for 1 ns;
+    wait for 100 fs;
     
     reset_n <= '1';
 
-    ck <= '1';
-    wait for 1 ns;
+    ck <= '1'; ------------------------------------- 2 
+    wait for 100 fs;
     ck <= '0';
-    wait for 1 ns;
+    wait for 100 fs;
+    
+    ck <= '1'; ------------------------------------- 4
+    wait for 100 fs;
+    ck <= '0';
+    wait for 100 fs;
    
     cspr_wb   <= '1';
     inval_czn <= '0';
@@ -263,26 +252,27 @@ begin
     inval1 <= '1';
 
     -- valider r1
-    inval_adr2 <= "1111";
+    inval_adr2 <= "0010";
     inval2 <= '1';
 
     radr1 <= "0001";
         
-    ck <= '1';
-    wait for 1 ns;        
+    ck <= '1'; ------------------------------------- 6
+    wait for 100 fs;        
     ck <= '0';
-    wait for 1 ns;        
+    wait for 100 fs;        
 
     inval_czn <= '1';
     inval_ovr <= '1';
     
     inval1 <= '0';
+    inval2 <= '0';
     inc_pc <= '1';
 
-    ck <= '1';
-    wait for 1 ns;
+    ck <= '1'; ------------------------------------- 8
+    wait for 100 fs;
     ck <= '0';
-    wait for 1 ns;
+    wait for 100 fs;
 
     cspr_wb   <= '0';
     wcry  <= '0';
@@ -304,36 +294,36 @@ begin
     inval_adr2 <= "1111";
     inval2 <= '0';
    
-    ck <= '1';
-    wait for 1 ns;
+    ck <= '1'; ------------------------------------- 10
+    wait for 100 fs;
     ck <= '0';
-    wait for 1 ns;
+    wait for 100 fs;
     
     -- lire dans r1
     radr1 <= "0001";
     
     ck <= '1';
-    wait for 1 ns;
+    wait for 100 fs;
     ck <= '0';
-    wait for 1 ns;
+    wait for 100 fs;
     
     -- ecrire dans r1
     wdata1 <= "00000000000000001111111111111111";
     wadr1 <= "0001";
     wen1 <= '1';
     ck <= '1';
-    wait for 1 ns;
+    wait for 100 fs;
     ck <= '0';
-    wait for 1 ns;
+    wait for 100 fs;
     
     --lire dans r1 la meme valeur que dans la premiere ecriture 
     radr1 <= "0001";
 
     ck <= '1';
-    wait for 1 ns;
+    wait for 100 fs;
 
     ck <= '0';
-    wait for 1 ns;
+    wait for 100 fs;
 
     
     --  Wait forever; this will finish the simulation.    
