@@ -1,5 +1,5 @@
 GHDL=ghdl
-all : decod_tb
+all : reg_tb decod_tb
 
 # compil fifo
 fifo_generic.o : fifo_generic.vhdl

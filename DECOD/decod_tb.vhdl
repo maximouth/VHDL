@@ -50,7 +50,7 @@ architecture Structurel of decod_tb is
 
       -- Exec Synchro
       dec2exe_empty	: out Std_Logic;
-      exe_pop		: in Std_logic;
+      dec2exe_pop	: in Std_logic;
 
       -- Alu command
       dec_alu_add		: out Std_Logic;
@@ -75,16 +75,16 @@ architecture Structurel of decod_tb is
       exe_flag_wb		: in Std_Logic;                    
 
       -- Ifetch interface
-      dec_pc		: out Std_Logic_Vector(31 downto 0) ;
+      dec2if_pc		: out Std_Logic_Vector(31 downto 0) ;
       -- INSTRUCTION lue
       if_ir		: in Std_Logic_Vector(31 downto 0) ;
 
       -- Ifetch synchro
       dec2if_empty	: out Std_Logic;
-      if_pop		: in Std_Logic;
+      if2dec_pop		: in Std_Logic;
 
       if2dec_empty	: in Std_Logic;
-      dec_pop_out	: out Std_Logic;
+      dec_pop	: out Std_Logic;
 
       -- Mem Write back to reg
       mem_res		: in Std_Logic_Vector(31 downto 0);
@@ -139,7 +139,7 @@ architecture Structurel of decod_tb is
 
   -- Exec Synchro
   signal dec2exe_empty	        : Std_Logic;
-  signal exe_pop		: Std_logic;
+  signal dec2exe_pop		: Std_logic;
 
   -- Alu command
   signal dec_alu_add		: Std_Logic;
@@ -164,16 +164,16 @@ architecture Structurel of decod_tb is
   signal exe_flag_wb		: Std_Logic;                    
 
   -- Ifetch interface
-  signal dec_pc		        : Std_Logic_Vector(31 downto 0) ;
+  signal dec2if_pc		        : Std_Logic_Vector(31 downto 0) ;
   -- INSTRUCTION lue
   signal if_ir		        : Std_Logic_Vector(31 downto 0) ;
 
   -- Ifetch synchro
   signal dec2if_empty	        : Std_Logic;
-  signal if_pop		        : Std_Logic;
+  signal if2dec_pop		        : Std_Logic;
 
   signal if2dec_empty	        : Std_Logic;
-  signal dec_pop_out		: Std_Logic;
+  signal dec_pop		: Std_Logic;
 
   -- Mem Write back to reg
   signal mem_res		: Std_Logic_Vector(31 downto 0);
@@ -231,7 +231,7 @@ begin
 
       -- Exec Synchro
       dec2exe_empty	=> dec2exe_empty,
-      exe_pop		=> exe_pop,
+      dec2exe_pop	=> dec2exe_pop,
 
       -- Alu command
       dec_alu_add	=> dec_alu_add,
@@ -256,16 +256,16 @@ begin
       exe_flag_wb	=> exe_flag_wb,                  
 
       -- Ifetch interface
-      dec_pc		=> dec_pc,
+      dec2if_pc		=> dec2if_pc,
       -- INSTRUCTION lue
       if_ir		=> if_ir,
 
       -- Ifetch synchro
       dec2if_empty	=> dec2if_empty,
-      if_pop		=> if_pop,
+      if2dec_pop		=> if2dec_pop,
 
       if2dec_empty	=> if2dec_empty,
-      dec_pop_out	=> dec_pop_out,
+      dec_pop	=> dec_pop,
 
       -- Mem Write back to reg
       mem_res		=> mem_res, 
@@ -328,8 +328,8 @@ begin
     if_ir <= "11100011101100000010000000000001"; 
     
     if2dec_empty <= '1';
-    exe_pop <= '1';
-    if_pop <= '0';
+    dec2exe_pop <= '1';
+    if2dec_pop <= '0';
     
     ck <= '1';
     wait for 10 ns;
