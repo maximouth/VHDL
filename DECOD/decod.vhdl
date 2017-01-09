@@ -301,7 +301,9 @@ signal shift_val_temp: Std_Logic_Vector(4 downto 0);
 
 -- DECOD FSM
 
-type state_type is (FETCH, RUN, WAIT_REG, INST_EXE,
+type state_type is (FETCH, RUN,
+                    WAIT_REG_INST, INST_EXE,
+                    WAIT_REG_MEM, INST_MEM,
                     BRANCH, LINK, MTRANS);
 signal cur_state, next_state : state_type;
 
@@ -477,7 +479,7 @@ begin
       end if;
 
     when RUN =>
-      -- Is there an instruction to decode 
+      -- Is there an instruction to decode? 
       if if2dec_empty = '1' then
         -- No, wait for the FETCH component
         next_state      <= RUN;
@@ -588,7 +590,7 @@ begin
                 -- decod perform in INST_EXE state
               end if;
               -- Wait for REG answer  
-              next_state <= WAIT_REG;
+              next_state <= WAIT_REG_INST;
             when "10" =>
               if if_ir(25) = '1' then
                 -- This is a Branch todo
@@ -608,11 +610,11 @@ begin
 
       end if;
 
-    when WAIT_REG =>
+    when WAIT_REG_INST =>
       -- REG component provide the register values
       if dec2exe_full = '1' then
         -- wait exec to finish
-        next_state <= WAIT_REG;
+        next_state <= WAIT_REG_INST;
       else
         -- send command to Exec
         next_state <= INST_EXE;
@@ -621,6 +623,9 @@ begin
     when INST_EXE =>
       -- prepare Operandes and operator to EXEC module
       -- as not pop performed on fetch fifo, if_ir is still valid
+      -- prepare Rd
+      dec_exe_dst <= if_ir(15 downto 12);
+      
       -- prepare the oper 1
       if rvalid1 = '1' then
         -- set the oper 1 value
@@ -748,6 +753,16 @@ begin
       -- send command to Exec, no value to push as it is decode
       dec2exe_push <= '1';
 
+      -- remove the current instruction from Fetch
+      dec_pop <= '1';
+      
+      -- send next instruction to Fetch
+      next_state <= FETCH;
+      
+    when WAIT_REG_MEM => -- todo
+      next_state <= INST_MEM;
+      
+    when INST_MEM =>  -- todo
       -- remove the current instruction from Fetch
       dec_pop <= '1';
       
