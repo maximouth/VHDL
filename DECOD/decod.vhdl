@@ -37,7 +37,7 @@ entity Decod is
 
     -- Exec Synchro
     dec2exe_empty	: out Std_Logic;
-    dec2exe_pop		: in Std_logic;  -- Former exe_pop
+    exe_pop		: in Std_logic; 
 
     -- Alu command
     dec_alu_add		: out Std_Logic;
@@ -66,7 +66,7 @@ entity Decod is
     if2dec_pop	: in Std_Logic;  -- former if_pop
 
     if2dec_empty: in Std_Logic;
-    dec_pop	: out Std_Logic;  -- former dec_pop
+    dec_pop	: out Std_Logic;
 
     -- Mem Write back to reg
     mem_res	: in Std_Logic_Vector(31 downto 0);
@@ -248,10 +248,10 @@ signal inval_mem_adr    : Std_Logic_Vector(3 downto 0);
 signal inval_mem        : Std_Logic;
 
 -- Flags
-signal cry	: Std_Logic;
-signal zero	: Std_Logic;
-signal neg	: Std_Logic;
-signal ovr	: Std_Logic;
+signal reg_cry	: Std_Logic;
+signal reg_zero	: Std_Logic;
+signal reg_neg	: Std_Logic;
+signal reg_ovr	: Std_Logic;
 
 signal reg_cznv : Std_Logic;
 signal reg_vv   : Std_Logic;
@@ -296,30 +296,13 @@ signal mem_sw	: Std_Logic;
 signal mem_sb	: Std_Logic;
 
 -- Shifter command
-signal shift_lsl: Std_Logic;
-signal shift_lsr: Std_Logic;
-signal shift_asr: Std_Logic;
-signal shift_ror: Std_Logic;
-signal shift_rrx: Std_Logic;
-signal shift_val: Std_Logic_Vector(4 downto 0);
-signal cy	: Std_Logic;
+signal shift_val_temp: Std_Logic_Vector(4 downto 0);
 
--- Alu operand selection
-signal comp_op1	: Std_Logic;
-signal comp_op2	: Std_Logic;
-signal alu_cy 	: Std_Logic;
-
--- Alu command
-signal alu_add	: Std_Logic;
-signal alu_and	: Std_Logic;
-signal alu_or	: Std_Logic;
-signal alu_xor	: Std_Logic;
 
 -- DECOD FSM
 
-type state_type is (FETCH, RUN, BRANCH, LINK, MTRANS);
-signal cur_state, next_state : state_type;
-type state_run_type is (DECOD, );
+type state_type is (FETCH, RUN, WAIT_REG, INST_EXE,
+                    BRANCH, LINK, MTRANS);
 signal cur_state, next_state : state_type;
 
 begin
@@ -330,7 +313,7 @@ begin
       din        => dec2exe_oper_in,  --?
       dout       => dec2exe_oper,  -- ?
       push       => dec2exe_push,  --
-      pop        => dec2exe_pop,   --
+      pop        => exe_pop,   --
       full       => dec2exe_full,  --
       empty      => dec2exe_empty, --
       
@@ -345,7 +328,7 @@ begin
       din        => dec2if_pc_in,
       dout       => dec2if_pc,
       push       => dec2if_push,  --
-      pop        => dec2if_pop,   --
+      pop        => if2dec_pop,   --
       full       => dec2if_full,  --
       empty      => dec2if_empty, --
 
@@ -382,10 +365,10 @@ begin
       radr3		=> radr3,
       reg_v3		=> rvalid3,
                                           
-      reg_cry		=> cry,
-      reg_zero		=> zero,
-      reg_neg		=> neg,
-      reg_ovr		=> ovr,
+      reg_cry		=> reg_cry,
+      reg_zero		=> reg_zero,
+      reg_neg		=> reg_neg,
+      reg_ovr		=> reg_ovr,
 					               
       reg_cznv		=> reg_cznv,
       reg_vv		=> reg_vv,
@@ -426,94 +409,6 @@ begin
 end process;
 
 
-        -- case if_ir (27 downto 26) is
-        --   when "00" => -- ALU Command
-        --     -- Init of the ALU command
-        --     dec_alu_add   <= '0';
-        --     dec_alu_and   <= '0';
-        --     dec_alu_or    <= '0';
-        --     dec_alu_xor   <= '0';
-        --     dec_alu_cy    <= '0';
-        --     dec_shift_lsl <= '0';
-        --     dec_shift_lsr <= '0';
-        --     dec_shift_asr <= '0';
-        --     dec_shift_ror <= '0';
-        --     dec_shift_rrx <= '0';
-        --     dec_shift_val <= "00000";
-        --     dec_comp_op1 <= '0';
-        --     dec_comp_op2 <= '0';
-        --     dec_cy <= '0';
-        --     dec_exe_wb  <= '0';
-        --     dec_flag_wb <= '0';
-        --     -- decod of the dest register
-        --     dec_exe_dest <= if_ir (15 downto 12);
-            
-        --     -- decod of the operande 1
-        --     -- decod of the operande 2
-        --     -- decod of the operator
-        --     case if_ir (24 downto 21) is
-        --       when "0000" => -- AND
-        --         dec_alu_and <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "0001" => -- EOR
-        --         dec_alu_xor <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "0010" => -- SUB
-        --         dec_alu_add <= '1';
-        --         dec_comp_op2 <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "0011" => -- RSB
-        --         dec_alu_add <= '1';
-        --         dec_comp_op1 <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "0100" => -- ADD
-        --         dec_alu_add <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "0101" => -- ADC
-        --         dec_alu_add <= '1';
-        --         dec_cy <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "0110" => -- SBC ??
-        --         dec_alu_add <= '1';
-        --         dec_comp_op2 <= '1';
-        --         dec_cy <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "0111" => -- RSC ??
-        --         dec_alu_add <= '1';
-        --         dec_comp_op1 <= '1';
-        --         dec_cy <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "1000" => -- TST
-        --         dec_alu_and <= '1';
-        --         dec_flag_wb <= '1';
-        --       when "1001" => -- TEQ
-        --         dec_alu_xor <= '1';
-        --         dec_flag_wb <= '1';
-        --       when "1010" => -- CMP
-        --         dec_alu_add <= '1';
-        --         dec_comp_op2 <= '1';
-        --         dec_flag_wb <= '1';
-        --       when "1011" => -- CMN
-        --         dec_alu_add <= '1';
-        --         dec_flag_wb <= '1';
-        --       when "1100" => -- ORR
-        --         dec_alu_or <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "1101" => -- MOV
-        --         dec_alu_xor <= '1';
-        --         dec_op1 <= X"00000000";
-        --         dec_exe_wb <= '1';
-        --       when "1110" => -- BIC
-        --         dec_alu_and <= '1';
-        --         dec_comp_op2 <= '1';
-        --         dec_exe_wb <= '1';
-        --       when "1111" => -- MVN
-        --         dec_alu_xor <= '1';
-        --         dec_op1 <= X"FFFFFFFF";
-        --         dec_exe_wb <= '1';
-        --       when others =>
-        --         report "Invalid operator";
-        --       end case;
 
         --   when "01" => -- Memory Access
         --   when "10" => -- Multiple Memory Access or Branch
@@ -542,21 +437,38 @@ process (cur_state, dec2if_full, cond, condv, operv, dec2exe_full,
   variable rm   : Std_Logic_Vector(3 downto 0);
   
 begin
+  -- Initialize all the outputs to complete
+  -- Init of the ALU command
+  dec_alu_add   <= '0';
+  dec_alu_and   <= '0';
+  dec_alu_or    <= '0';
+  dec_alu_xor   <= '0';
+  dec_alu_cy    <= '0';
+  dec_shift_lsl <= '0';
+  dec_shift_lsr <= '0';
+  dec_shift_asr <= '0';
+  dec_shift_ror <= '0';
+  dec_shift_rrx <= '0';
+  dec_shift_val <= "00000";
+  shift_val_temp <= "00000";
+  dec_comp_op1 <= '0';
+  dec_comp_op2 <= '0';
+  dec_cy <= '0';
+  dec_exe_wb  <= '0';
+  dec_flag_wb <= '0';
+  dec2exe_push <= '0';
+ 
   case cur_state is
 
     when FETCH =>
-      dec2if_pop   <= '0';
+      dec_pop   <= '0';
       dec2exe_push <= '0';
-      blink        <= '0';
-      mtrans_shift <= '0';
 
       -- T2
       if dec2if_full = '0' and reg_pcv = '1' then
         next_state      <= RUN;
-        state_run       <= DECOD;
-        -- replace the fifo value by PC 
+        -- Send a new PC value to component FETCH 
         dec2if_push	<= '1';
-        dec2if_pop	<= '1';
         dec2if_pc_in    <= reg_pc;
         inc_pc          <= '1';
       else
@@ -564,51 +476,282 @@ begin
       end if;
 
     when RUN =>
-      --T1 / T7
-      if if2dec_empty = '1' or dec2exe_full = '1' then
-        next_state      <= FETCH;
+      -- Is there an instruction to decode 
+      if if2dec_empty = '1' then
+        -- No, wait for the FETCH component
+        next_state      <= RUN;
       else
-        -- if2dec_empty = 0, so if_ir can be interpreted
-      case if_ir (31 downto 28) is 
+        -- if_ir can be interpreted
+        -- by default the instruction should be executed
+        pred := '1';
+        case if_ir (31 downto 28) is 
         --EQ
-        when "0000" => pred := exe_z;
+        when "0000" =>
+          if reg_cznv = '1' then
+            pred := reg_zero;
+          end if;
         --NE
-        when "0001" => pred := not (exe_z);
+        when "0001" =>
+          if reg_cznv = '1' then
+            pred := not (reg_zero);
+          end if;       
         --CS
-        when "0010" => pred := exe_c;
+        when "0010" =>
+          if reg_cznv = '1' then
+            pred := reg_cry;
+          end if;
         --CC
-        when "0011" => pred := not (exe_c);
+        when "0011" =>
+          if reg_cznv = '1' then
+            pred := not (reg_cry);
+          end if;
         -- MI
-        when "0100" => pred := exe_n;
+        when "0100" =>
+          if reg_cznv = '1' then
+            pred := reg_neg;
+          end if;
         -- PL
-        when "0101" => pred := not (exe_n);
+        when "0101" =>
+          if reg_cznv = '1' then
+            pred := not (reg_neg);
+          end if;
         -- VS
-        when "0110" => pred := exe_v;
+        when "0110" =>
+          if reg_vv = '1' then
+            pred := reg_ovr;
+          end if;
         -- VC
-        when "0111" => pred := not (exe_v);
+        when "0111" =>
+          if reg_vv = '1' then
+            pred := not (reg_ovr);
+          end if;
         --HI
-        when "1000" => pred := exe_c and not (exe_v);
+        when "1000" =>
+          if reg_cznv = '1' and reg_vv = '1' then
+            pred := reg_cry and not (reg_ovr);
+          end if;
         --LS
-        when "1001" => pred := exe_z and not (exe_c);
+        when "1001" =>
+          if reg_cznv = '1' then
+            pred := reg_zero and not (reg_cry);
+          end if;
         --GE
-        when "1010" => pred := not (exe_n xor exe_v);
+        when "1010" =>
+          if reg_cznv = '1' and reg_vv = '1' then
+            pred := not (reg_neg xor reg_ovr);
+          end if;     
         --LT
-        when "1011" => pred := exe_n xor exe_v;
+        when "1011" =>
+          if reg_cznv = '1' and reg_vv = '1' then
+            pred := reg_neg xor reg_ovr;
+          end if;
         --GT  
-        when "1100" => pred := not(exe_z) and not (exe_n xor exe_v);
+        when "1100" =>
+          if reg_cznv = '1' and reg_vv = '1' then
+            pred := not(reg_zero) and not (reg_neg xor reg_ovr);
+          end if;
         -- LE
-        when "1101" => pred := exe_z or (exe_n xor exe_v);
+        when "1101" =>
+          if reg_cznv = '1' and reg_vv = '1' then
+            pred := reg_zero or (reg_neg xor reg_ovr);
+          end if;
         -- AL
-        when "1110" => pred := '1';
-        when "1111" => pred := '0';
-        when others => pred := '0';
-                       report "Non initialized instruction";
-      end case;
+        when "1110" =>
+          pred := '1';
+        when "1111" =>
+          pred := '0';
+        when others =>
+          pred := '0';
+          report "Non initialized instruction";
+        end case;
 
+        -- is the instruction to execute?
+        if pred = '1' then
+          -- yes, process the kind of instruction
+          case if_ir (27 downto 26) is
+            when "00" => -- This is a data processing
+              -- Read Rn value
+              radr1 <= if_ir(19 downto 16);
+              
+              -- Decod the registers todo
+              if if_ir(25) = '0' then
+                -- Oper 2 is a register
+                -- Read Rm value
+                radr2 <= if_ir(3 downto 0);
+                if if_ir(4) = '1' then
+                  -- Read shift value in register Rs
+                  radr3 <= if_ir(11 downto 8);
+                end if;
+              else
+                -- Oper 2 is a immediat value
+                -- decod perform in INST_EXE state
+              end if;
+              -- Wait for REG answer  
+              next_state <= WAIT_REG;
+            when "10" =>
+              if if_ir(25) = '1' then
+                -- This is a Branch todo
+              else
+                -- This is a multiple memory access todo
+              end if;
+            when "01" => -- this is a simple memory access todo
+            when others =>
+              report "Illegal instruction";
+          end case;
+        else
+          -- no, pop the instruction
+          -- fetch the next instruction
+          dec_pop     <= '1';
+          next_state  <= FETCH;
+        end if;
+
+      end if;
+
+    when WAIT_REG =>
+      -- REG component provide the register values
+      if dec2exe_full = '1' then
+        -- wait exec to finish
+        next_state <= WAIT_REG;
+      else
+        -- send command to Exec
+        next_state <= INST_EXE;
+      end if;
+      
+    when INST_EXE =>
+      -- prepare Operandes and operator to EXEC module
+      -- as not pop performed on fetch fifo, if_ir is still valid
+      -- prepare the oper 1
+      if rvalid1 = '1' then
+        -- set the oper 1 value
+        dec_op1 <= rdata1;
+      else
+        -- ??             
+      end if;
+      
+      -- prepare the oper 2
+      if if_ir(25) = '0' then  -- Oper 2 is a register
+        if rvalid2 = '1' then
+        -- set the oper 2 value
+          dec_op2 <= rdata2;
+        else
+          -- ??             
+        end if;
+        
+        -- Set the shift value
+        if if_ir(4) = '0' then
+          dec_shift_val <= if_ir(11 downto 7);
+          shift_val_temp <= if_ir(11 downto 7);
+        else
+          if rvalid3 = '1' then
+            dec_shift_val <= rdata3(4 downto 0);
+            shift_val_temp <= rdata3(4 downto 0);
+          else
+          -- ??             
+          end if;
+        end if;
+
+        -- decod the shift
+        case if_ir(6 downto 5) is
+          when "00" => -- Logic shift left
+            dec_shift_lsl <= '1';
+          when "01" => -- Logic shift right
+            dec_shift_lsr <= '1';
+          when "10" => -- Arithmetic shift right
+            dec_shift_asr <= '1';
+          when "11" => -- Rotation
+            if (shift_val_temp = "00000") then
+              -- Rotate right with cry
+              dec_shift_rrx <= '1';
+            else
+              -- Rotate right
+              dec_shift_ror <= '1';
+            end if;
+          when others =>
+            report "Illegal shift value";
+        end case;
+
+      else -- Oper 2 is an immediat
+        -- set the oper 2 value
+        dec_op2(31 downto 8) <= X"000000";
+        dec_op2(7 downto 0) <= if_ir(7 downto 0);
+        dec_shift_ror <= '1';
+        dec_shift_val(4) <= '0';
+        dec_shift_val(3 downto 0) <= if_ir(11 downto 8);
+      end if;
+      
+      -- decode the opcode
+      case if_ir (24 downto 21) is
+        when "0000" => -- AND
+          dec_alu_and <= '1';
+          dec_exe_wb <= '1';          
+        when "0001" => -- EOR
+          dec_alu_xor <= '1';
+          dec_exe_wb <= '1';
+        when "0010" => -- SUB
+          dec_alu_add <= '1';
+          dec_comp_op2 <= '1';
+          dec_exe_wb <= '1';
+        when "0011" => -- RSB
+          dec_alu_add <= '1';
+          dec_comp_op1 <= '1';
+          dec_exe_wb <= '1';
+        when "0100" => -- ADD
+          dec_alu_add <= '1';
+          dec_exe_wb <= '1';
+        when "0101" => -- ADC
+          dec_alu_add <= '1';
+          dec_alu_cy <= '1';
+          dec_exe_wb <= '1';
+        when "0110" => -- SBC ??
+          dec_alu_add <= '1';
+          dec_comp_op2 <= '1';
+          dec_alu_cy <= '1';
+          dec_exe_wb <= '1';
+        when "0111" => -- RSC ??
+          dec_alu_add <= '1';
+          dec_comp_op1 <= '1';
+          dec_alu_cy <= '1';
+          dec_exe_wb <= '1';
+        when "1000" => -- TST
+          dec_alu_and <= '1';
+          dec_flag_wb <= '1';
+        when "1001" => -- TEQ
+          dec_alu_xor <= '1';
+          dec_flag_wb <= '1';
+        when "1010" => -- CMP
+          dec_alu_add <= '1';
+          dec_comp_op2 <= '1';
+          dec_flag_wb <= '1';
+        when "1011" => -- CMN
+          dec_alu_add <= '1';
+          dec_flag_wb <= '1';
+        when "1100" => -- ORR
+          dec_alu_or <= '1';
+          dec_exe_wb <= '1';
+        when "1101" => -- MOV
+          dec_alu_xor <= '1';
+          dec_op1 <= X"00000000";
+          dec_exe_wb <= '1';
+        when "1110" => -- BIC
+          dec_alu_and <= '1';
+          dec_comp_op2 <= '1';
+          dec_exe_wb <= '1';
+        when "1111" => -- MVN
+          dec_alu_xor <= '1';
+          dec_op1 <= X"FFFFFFFF";
+          dec_exe_wb <= '1';
+        when others =>
+          report "Invalid operator";
+      end case;
+      
+      -- send command to Exec, no value to push as it is decode
+      dec2exe_push <= '1';
+      
     when BRANCH =>
     when LINK =>
     when MTRANS =>
-
+    when others =>
+      report "Illegal state";
   end case;
 end process;
 
