@@ -50,7 +50,7 @@ architecture Structurel of decod_tb is
 
       -- Exec Synchro
       dec2exe_empty	: out Std_Logic;
-      dec2exe_pop	: in Std_logic;
+      exe_pop	        : in Std_logic;
 
       -- Alu command
       dec_alu_add		: out Std_Logic;
@@ -139,7 +139,7 @@ architecture Structurel of decod_tb is
 
   -- Exec Synchro
   signal dec2exe_empty	        : Std_Logic;
-  signal dec2exe_pop		: Std_logic;
+  signal exe_pop		: Std_logic;
 
   -- Alu command
   signal dec_alu_add		: Std_Logic;
@@ -231,7 +231,7 @@ begin
 
       -- Exec Synchro
       dec2exe_empty	=> dec2exe_empty,
-      dec2exe_pop	=> dec2exe_pop,
+      exe_pop	        => exe_pop,
 
       -- Alu command
       dec_alu_add	=> dec_alu_add,
@@ -328,7 +328,7 @@ begin
     if_ir <= "11100011101100000010000000000001"; 
     
     if2dec_empty <= '1';
-    dec2exe_pop <= '1';
+    exe_pop <= '1';
     if2dec_pop <= '0';
     
     ck <= '1';
