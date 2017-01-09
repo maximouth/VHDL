@@ -460,7 +460,12 @@ begin
   dec_flag_wb <= '0';
   dec2exe_push <= '0';
   dec_pop <= '0';
- 
+  
+  dec_mem_lb <= '0';
+  dec_mem_lw <= '0';
+  dec_mem_sb <= '0';
+  dec_mem_sw <= '0';
+
   case cur_state is
 
     when FETCH =>
@@ -598,6 +603,24 @@ begin
                 -- This is a multiple memory access todo
               end if;
             when "01" => -- this is a simple memory access todo
+              -- Read Rn value
+              radr1 <= if_ir(19 downto 16);
+              
+              -- Decod the registers todo
+              if if_ir(25) = '1' then
+                -- Oper 2 is a register
+                -- Read Rm value
+                radr2 <= if_ir(3 downto 0);
+                if if_ir(4) = '1' then
+                  -- Read shift value in register Rs
+                  radr3 <= if_ir(11 downto 8);
+                end if;
+              else
+                -- Oper 2 is a immediat value
+                -- decod perform in INST_MEM state
+              end if;
+              -- Wait for REG answer  
+              next_state <= WAIT_REG_MEM;
             when others =>
               report "Illegal instruction";
           end case;
@@ -624,7 +647,7 @@ begin
       -- prepare Operandes and operator to EXEC module
       -- as not pop performed on fetch fifo, if_ir is still valid
       -- prepare Rd
-      dec_exe_dst <= if_ir(15 downto 12);
+      dec_exe_dest <= if_ir(15 downto 12);
       
       -- prepare the oper 1
       if rvalid1 = '1' then
@@ -759,10 +782,27 @@ begin
       -- send next instruction to Fetch
       next_state <= FETCH;
       
-    when WAIT_REG_MEM => -- todo
+    when WAIT_REG_MEM => 
       next_state <= INST_MEM;
       
-    when INST_MEM =>  -- todo
+    when INST_MEM => -- 
+      -- prepare operandes todo
+
+      -- prepare operator
+      if if_ir(20) = '1' then
+        if if_ir(22) = '1' then
+          dec_mem_lb <= '1';
+        else
+          dec_mem_lw <= '1';
+        end if;       
+      else
+        if if_ir(22) = '1' then
+          dec_mem_sb <= '1';
+        else
+          dec_mem_sw <= '1';
+        end if;       
+      end if; 
+ 
       -- remove the current instruction from Fetch
       dec_pop <= '1';
       
