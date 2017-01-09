@@ -457,6 +457,7 @@ begin
   dec_exe_wb  <= '0';
   dec_flag_wb <= '0';
   dec2exe_push <= '0';
+  dec_pop <= '0';
  
   case cur_state is
 
@@ -746,6 +747,12 @@ begin
       
       -- send command to Exec, no value to push as it is decode
       dec2exe_push <= '1';
+
+      -- remove the current instruction from Fetch
+      dec_pop <= '1';
+      
+      -- send next instruction to Fetch
+      next_state <= FETCH;
       
     when BRANCH =>
     when LINK =>
