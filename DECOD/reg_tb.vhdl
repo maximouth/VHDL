@@ -40,6 +40,12 @@ architecture Structurel of reg_tb is
       reg_rd3		: out Std_Logic_Vector(31 downto 0);
       radr3		: in Std_Logic_Vector(3 downto 0);
       reg_v3		: out Std_Logic;
+
+      -- Read Port 3 32 bits
+      reg_rd4		: out Std_Logic_Vector(31 downto 0);
+      radr4		: in Std_Logic_Vector(3 downto 0);
+      reg_v4		: out Std_Logic;
+
       
       -- read CSPR Port
       reg_cry		: out Std_Logic;
@@ -107,6 +113,11 @@ architecture Structurel of reg_tb is
   signal radr3		:  std_logic_vector(3 downto 0);
   signal reg_v3		:  Std_Logic;
 
+  -- SIGNAL Read Posignal rt 4 32 bits
+  signal reg_rd4		:  std_logic_vector(31 downto 0);
+  signal radr4		:  std_logic_vector(3 downto 0);
+  signal reg_v4		:  Std_Logic;
+
   
   -- signal read CSPR Port
   signal reg_cry		:  Std_Logic;
@@ -173,6 +184,12 @@ begin
       reg_rd3 =>reg_rd3,
       radr3   =>radr3,
       reg_v3  => reg_v3,
+
+      -- Read Port 4 32 bits
+      reg_rd4 =>reg_rd4,
+      radr4   =>radr4,
+      reg_v4  => reg_v4,
+
       
       -- read CSPR Port
       reg_cry  => reg_cry,

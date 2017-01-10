@@ -118,6 +118,11 @@ component reg
     radr3	: in Std_Logic_Vector(3 downto 0);
     reg_v3	: out Std_Logic;
 
+    -- Read Port 3 32 bits
+    reg_rd4	: out Std_Logic_Vector(31 downto 0);
+    radr4	: in Std_Logic_Vector(3 downto 0);
+    reg_v4	: out Std_Logic;
+
     -- read CSPR Port
     reg_cry	: out Std_Logic;
     reg_zero	: out Std_Logic;
@@ -239,6 +244,11 @@ signal rvalid2  : Std_Logic;
 signal radr3    : Std_Logic_Vector(3 downto 0);
 signal rdata3   : Std_Logic_Vector(31 downto 0);
 signal rvalid3  : Std_Logic;
+
+signal radr4    : Std_Logic_Vector(3 downto 0);
+signal rdata4   : Std_Logic_Vector(31 downto 0);
+signal rvalid4  : Std_Logic;
+
 
 -- RF inval ports
 signal inval_exe_adr    : Std_Logic_Vector(3 downto 0);
@@ -366,6 +376,10 @@ begin
       reg_rd3		=> rdata3,
       radr3		=> radr3,
       reg_v3		=> rvalid3,
+
+      reg_rd4		=> rdata4,
+      radr4		=> radr4,
+      reg_v4		=> rvalid4,
                                           
       reg_cry		=> reg_cry,
       reg_zero		=> reg_zero,
@@ -580,7 +594,9 @@ begin
             when "00" => -- This is a data processing
               -- Read Rn value
               radr1 <= if_ir(19 downto 16);
-              
+              -- Read Rd value
+              radr4 <= if_ir(15 downto 12);
+               
               -- Decod the registers todo
               if if_ir(25) = '0' then
                 -- Oper 2 is a register
@@ -605,6 +621,10 @@ begin
             when "01" => -- this is a simple memory access todo
               -- Read Rn value
               radr1 <= if_ir(19 downto 16);
+
+              -- Read Rd value
+              radr4 <= if_ir(15 downto 12);
+               
               
               -- Decod the registers todo
               if if_ir(25) = '1' then
@@ -784,10 +804,93 @@ begin
       
     when WAIT_REG_MEM => 
       next_state <= INST_MEM;
+
+      
       
     when INST_MEM => -- 
       -- prepare operandes todo
 
+      dec_mem_dest <= if_ir (19 downto 16);
+      dec_mem_data <= rdata4;
+
+      -- op1
+      op1 <= rdata1;
+      dec_comp_op1 <= '0';
+
+      -- alu operand
+      dec_alu_add <= '1';
+      dec_alu_and <= '0';
+      dec_alu_or  <= '0';
+      dec_alu_xor <= '0';
+      dec_alu_cy  <= '0';
+
+      
+      dec_exe_wb   <= '0';
+      dec_flag_wb  <= '0';
+      dec_exe_dest <= x"0";
+      
+      -- if op2 is an immediat or not
+      if if_ir(25) = '0' then
+
+        -- op2
+        op2 <= x"00" & "0000" & if_ir (11 downto 0);
+
+      -- shift operand
+        dec_shift_lsl <= '1';
+        dec_shift_lsr <= '0';
+        dec_shift_asr <= '0';
+        dec_shift_ror <= '0';
+        dec_shift_rrx <= '0';
+        dec_shift_val <= "00000";
+        dec_cy <= '0';
+        
+      else
+
+        op2 <= rdata2;
+
+        dec_shift_lsl <= '0';
+        dec_shift_lsr <= '0';
+        dec_shift_asr <= '0';
+        dec_shift_ror <= '0';
+        dec_shift_rrx <= '0';
+     
+        dec_cy <= '0';  
+        
+        case if_ir (6 downto 5) is
+
+          when "00" =>
+            --lsl
+            dec_shift_lsl <= '1';
+
+          when "01" =>
+            --lsr
+            dec_shift_lsr <= '1';
+
+          when "10" =>
+            -- asr
+            dec_shift_asr <= '1';
+
+          when "11" =>
+            --ror
+            dec_shift_ror <= '1';
+
+          when others =>
+            report "illegal state";
+        end case;
+        
+        
+        -- shift same as usual instruction
+        if if_ir(4) = '0' then
+          dec_shift_val <= x"000" & "000" & if_ir (11 downto 7); 
+        else
+          dec_shift_val <= rdata3(4 downto 0);
+        end if;
+        
+        
+      end if;
+
+
+      
       -- prepare operator
       if if_ir(20) = '1' then
         if if_ir(22) = '1' then

@@ -36,7 +36,12 @@ entity Reg is
     reg_rd3		: out Std_Logic_Vector(31 downto 0);
     radr3		: in Std_Logic_Vector(3 downto 0);
     reg_v3		: out Std_Logic;
-    
+
+    -- Read Port 4 32 bits
+    reg_rd4		: out Std_Logic_Vector(31 downto 0);
+    radr4		: in Std_Logic_Vector(3 downto 0);
+    reg_v4		: out Std_Logic;
+
     -- read CSPR Port
     reg_cry		: out Std_Logic;
     reg_zero		: out Std_Logic;
@@ -235,6 +240,9 @@ begin
 
   reg_rd3 <= r_reg (to_integer (unsigned (radr3)));
   reg_v3  <= r_valid (to_integer (unsigned (radr3)));
+
+  reg_rd4 <= r_reg (to_integer (unsigned (radr4)));
+  reg_v4  <= r_valid (to_integer (unsigned (radr4)));
 
   reg_pc  <= r_reg (15);
   reg_pcv <= r_valid (15);
