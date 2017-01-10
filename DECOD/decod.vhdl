@@ -802,15 +802,79 @@ begin
           dec_mem_sw <= '1';
         end if;       
       end if; 
- 
+
+      
+
+      
       -- remove the current instruction from Fetch
       dec_pop <= '1';
       
       -- send next instruction to Fetch
       next_state <= FETCH;
+
+
+
+    when LINK =>
+      -- write PC + 4 in r14 for return address for function
+
+      dec_op1       <= reg_pc;
+      dec_comp_op1  <= '0';
+      
+      dec_op2       <= x"00_00_00_04";
+      dec_comp_op2  <= '0';
+      
+      dec_exe_dest  <= x"E";
+      dec_exe_wb    <= '1';
+      dec_flag_wb   <= '0';
+      
+      dec_alu_add   <= '1';
+      dec_alu_and   <= '0';
+      dec_alu_or    <= '0';
+      dec_alu_xor   <= '0';
+      dec_alu_cy    <= '0';
+      
+      dec_shift_lsl <= '1';
+      dec_shift_lsr <= '0';
+      dec_shift_asr <= '0';
+      dec_shift_ror <= '0';
+      dec_shift_rrx <= '0';
+      dec_shift_val <= "00000";
+      dec_cy <= '0';
+
+      next_state <= BRANCH;      
       
     when BRANCH =>
-    when LINK =>
+      
+      dec_op1       <= Std_logic_vector (unsigned (reg_pc) + 4);
+      dec_comp_op1  <= '0';
+      
+      dec_op2       <= "00000000" & if_ir (23 downto 0);
+      dec_comp_op2  <= '0';
+      
+      dec_exe_dest  <= x"E";
+      dec_exe_wb    <= '1';
+      dec_flag_wb   <= '0';
+      
+      dec_alu_add   <= '1';
+      dec_alu_and   <= '0';
+      dec_alu_or    <= '0';
+      dec_alu_xor   <= '0';
+      dec_alu_cy    <= '0';
+      
+      dec_shift_lsl <= '1';
+      dec_shift_lsr <= '0';
+      dec_shift_asr <= '0';
+      dec_shift_ror <= '0';
+      dec_shift_rrx <= '0';
+      dec_shift_val <= "00010";
+      dec_cy <= '0';
+      
+      -- remove the current instruction from Fetch
+      dec_pop <= '1';
+      
+      -- send next instruction to Fetch
+      next_state <= FETCH;      
+
     when MTRANS =>
     when others =>
       report "Illegal state";
