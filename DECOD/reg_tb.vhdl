@@ -41,11 +41,6 @@ architecture Structurel of reg_tb is
       radr3		: in Std_Logic_Vector(3 downto 0);
       reg_v3		: out Std_Logic;
 
-      -- Read Port 3 32 bits
-      reg_rd4		: out Std_Logic_Vector(31 downto 0);
-      radr4		: in Std_Logic_Vector(3 downto 0);
-      reg_v4		: out Std_Logic;
-
       
       -- read CSPR Port
       reg_cry		: out Std_Logic;
@@ -112,11 +107,6 @@ architecture Structurel of reg_tb is
   signal reg_rd3		:  std_logic_vector(31 downto 0);
   signal radr3		:  std_logic_vector(3 downto 0);
   signal reg_v3		:  Std_Logic;
-
-  -- SIGNAL Read Posignal rt 4 32 bits
-  signal reg_rd4		:  std_logic_vector(31 downto 0);
-  signal radr4		:  std_logic_vector(3 downto 0);
-  signal reg_v4		:  Std_Logic;
 
   
   -- signal read CSPR Port
@@ -185,11 +175,6 @@ begin
       radr3   =>radr3,
       reg_v3  => reg_v3,
 
-      -- Read Port 4 32 bits
-      reg_rd4 =>reg_rd4,
-      radr4   =>radr4,
-      reg_v4  => reg_v4,
-
       
       -- read CSPR Port
       reg_cry  => reg_cry,
@@ -230,108 +215,116 @@ begin
     -- reset le banc de registre
 
     ck <= '0';
-    wait for 100 fs;
+    wait for 10 fs;
      
     radr1 <= "0001";
     radr2 <= "0010";        
-    radr3 <= "0011";
+    radr3 <= "1111";
 
     reset_n <= '0';
     
     ck <= '1'; ------------------------------------- 0
-    wait for 100 fs;
+    wait for 10 fs;
     ck <= '0';
-    wait for 100 fs;
+    wait for 10 fs;
     
     reset_n <= '1';
 
-    ck <= '1'; ------------------------------------- 2 
-    wait for 100 fs;
-    ck <= '0';
-    wait for 100 fs;
+    -- ck <= '1'; ------------------------------------- 2 
+    -- wait for 10 fs;
+    -- ck <= '0';
+    -- wait for 10 fs;
     
-    ck <= '1'; ------------------------------------- 4
-    wait for 100 fs;
-    ck <= '0';
-    wait for 100 fs;
+    -- ck <= '1'; ------------------------------------- 4
+    -- wait for 10 fs;
+    -- ck <= '0';
+    -- wait for 10 fs;
    
-    cspr_wb   <= '1';
+    cspr_wb   <= '0';
     inval_czn <= '0';
     inval_ovr <= '0';
 
-    wcry  <= '1';
-    wzero <= '1';
-    wneg  <= '1';
-    wovr  <= '1';
+    wcry  <= '0';
+    wzero <= '0';
+    wneg  <= '0';
+    wovr  <= '0';
     
     -- invalider r1
     inval_adr1 <= "0001";
     inval1 <= '1';
 
-    -- valider r1
+    -- invalider r1
     inval_adr2 <= "0010";
     inval2 <= '1';
 
-    radr1 <= "0001";
+    -- radr1 <= "0001";
+    -- radr2 <= "0010";
+    -- radr3 <= "1111";
         
     ck <= '1'; ------------------------------------- 6
-    wait for 100 fs;        
+    wait for 10 fs;        
     ck <= '0';
-    wait for 100 fs;        
+    wait for 10 fs;        
 
-    inval_czn <= '1';
-    inval_ovr <= '1';
+    -- inval_czn <= '1';
+    -- inval_ovr <= '1';
     
-    inval1 <= '0';
-    inval2 <= '0';
-    inc_pc <= '1';
+    -- inval1 <= '0';
+    -- inval2 <= '0';
+    -- inc_pc <= '1';
 
-    ck <= '1'; ------------------------------------- 8
-    wait for 100 fs;
-    ck <= '0';
-    wait for 100 fs;
+    -- ck <= '1'; ------------------------------------- 8
+    -- wait for 10 fs;
+    -- ck <= '0';
+    -- wait for 10 fs;
 
-    cspr_wb   <= '0';
-    wcry  <= '0';
-    wzero <= '0';
-    wneg  <= '0';
-    wovr  <= '0';
+    -- cspr_wb   <= '0';
+    -- wcry  <= '0';
+    -- wzero <= '0';
+    -- wneg  <= '0';
+    -- wovr  <= '0';
     
     -- ecrire dans r1
     wdata1 <= "11111111111111110000000000000000";
     wadr1 <= "0001";
     wen1 <= '1';
     
-    -- ecrire dans r2
-    wdata2 <= "11111111111111110000000000000000";
+    -- ne pas ecrire dans r2
+    wdata2 <= "01010101010101010101010101010101";
     wadr2 <= "0010";
     wen2 <= '0';
+
+    inc_pc <= '1';
     
      -- valider r1
-    inval_adr2 <= "1111";
-    inval2 <= '0';
+    inval_adr1 <= "0001";
+    inval1 <= '0';
+    --  valider r1
+    -- inval_adr2 <= "1111";
+    -- inval2 <= '0';
    
     ck <= '1'; ------------------------------------- 10
-    wait for 100 fs;
+    wait for 10 fs;
     ck <= '0';
-    wait for 100 fs;
+    wait for 10 fs;
     
     -- lire dans r1
     radr1 <= "0001";
-    
+       
     ck <= '1';
-    wait for 100 fs;
+    wait for 10 fs;
     ck <= '0';
-    wait for 100 fs;
+    wait for 10 fs;
     
     -- ecrire dans r1
     wdata1 <= "00000000000000001111111111111111";
     wadr1 <= "0001";
     wen1 <= '1';
+    
     ck <= '1';
-    wait for 100 fs;
+    wait for 10 fs;
     ck <= '0';
-    wait for 100 fs;
+    wait for 10 fs;
     
     --lire dans r1 la meme valeur que dans la premiere ecriture 
     radr1 <= "0001";

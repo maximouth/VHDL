@@ -118,10 +118,6 @@ component reg
     radr3	: in Std_Logic_Vector(3 downto 0);
     reg_v3	: out Std_Logic;
 
-    -- Read Port 3 32 bits
-    reg_rd4	: out Std_Logic_Vector(31 downto 0);
-    radr4	: in Std_Logic_Vector(3 downto 0);
-    reg_v4	: out Std_Logic;
 
     -- read CSPR Port
     reg_cry	: out Std_Logic;
@@ -377,10 +373,6 @@ begin
       radr3		=> radr3,
       reg_v3		=> rvalid3,
 
-      reg_rd4		=> rdata4,
-      radr4		=> radr4,
-      reg_v4		=> rvalid4,
-                                          
       reg_cry		=> reg_cry,
       reg_zero		=> reg_zero,
       reg_neg		=> reg_neg,
